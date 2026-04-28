@@ -325,40 +325,24 @@ body.dark-mode .card-desc { color: #8a9dad; }
     background: rgba(0,0,0,0.8); color: white; padding: 8px 16px;
     border-radius: 20px; z-index: 9999; pointer-events: none;
 }
-        /* 目录按钮固定在左下角或右上角 */
-.menu-btn {
-    position: fixed;
-    bottom: 30px;
-    left: 30px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: #2d5a6e;
-    color: white;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 99;
-    font-size: 20px;
-}
-
-/* 侧边栏抽屉 */
+        /* 侧边栏基础样式 */
 .sidebar {
     position: fixed;
     top: 0;
-    left: -280px; /* 默认隐藏在左侧外 */
+    left: -280px; /* 初始隐藏 */
     width: 280px;
     height: 100%;
-    background: white;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    z-index: 1000;
-    transition: left 0.3s ease; /* 滑动动画 */
+    background: #ffffff;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+    z-index: 1001;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
 }
 
+/* 侧边栏激活状态 */
 .sidebar.active {
-    left: 0; /* 弹出 */
+    left: 0;
 }
 
 /* 遮罩层 */
@@ -368,43 +352,57 @@ body.dark-mode .card-desc { color: #8a9dad; }
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(2px);
     display: none;
-    z-index: 999;
+    z-index: 1000;
 }
 
 .sidebar-overlay.active {
     display: block;
 }
 
-/* 侧边栏内容 */
-.sidebar-header {
-    padding: 20px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: bold;
-}
-
+/* 侧边栏内部条目 */
 .side-nav {
     flex: 1;
     overflow-y: auto;
-    padding: 10px;
+    padding: 15px;
 }
 
 .side-nav-item {
-    padding: 12px 15px;
-    margin: 5px 0;
+    padding: 12px 16px;
+    margin-bottom: 4px;
     border-radius: 8px;
     cursor: pointer;
+    color: #4a5568;
     transition: background 0.2s;
+    font-size: 0.95rem;
 }
 
 .side-nav-item:hover {
-    background: #f0f4f8;
+    background: #f1f5f9;
+    color: #2d5a6e;
 }
 
+/* 暗色模式适配 */
+body.dark-mode .sidebar {
+    background: #1e293b;
+    color: #e2e8f0;
+}
+
+body.dark-mode .side-nav-item {
+    color: #cbd5e0;
+}
+
+body.dark-mode .side-nav-item:hover {
+    background: #334155;
+    color: #60a5fa;
+}
+
+/* 分类锚点留白，防止被顶部遮挡 */
+.category {
+    scroll-margin-top: 100px;
+}
 /* 暗黑模式适配 */
 body.dark-mode .sidebar { background: #1e293b; color: white; }
 body.dark-mode .side-nav-item:hover { background: #334155; }
@@ -547,6 +545,19 @@ const authPassword = document.getElementById('authPassword');
 const exportBtn = document.getElementById('exportBtn');
 const importBtn = document.getElementById('importBtn');
 const importFile = document.getElementById('importFile');
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('sidebarOverlay');
+const menuToggle = document.getElementById('menuToggle');
+const closeSidebar = document.getElementById('closeSidebar');
+
+function toggleSidebar() {
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+menuToggle.onclick = toggleSidebar;
+closeSidebar.onclick = toggleSidebar;
+overlay.onclick = toggleSidebar;
 
 // --- 3. 初始化与权限控制 ---
 async function initSupabase() {
@@ -683,8 +694,11 @@ exportBtn.onclick = () => {
 
 // --- 5. UI 渲染 ---
 function render(dataToRender = sitesData) {
+    const sideNav = document.getElementById('sideNav');
+    
     if (!dataToRender.length) {
         categoriesContainer.innerHTML = `<div class="no-results">✨ 暂无内容</div>`;
+        sideNav.innerHTML = ''; 
         return;
     }
 
@@ -694,29 +708,34 @@ function render(dataToRender = sitesData) {
         groups[site.category].push(site);
     });
 
-    let html = '';
+    let mainHtml = '';
     let sideHtml = '';
 
     Object.entries(groups).forEach(([category, items]) => {
-        // 创建唯一ID（对中文进行简单编码处理）
-        const categoryId = 'cat-' + btoa(encodeURIComponent(category)).substring(0, 8);
+        // 使用 Base64 或特定字符转换 ID，防止分类名中有空格或特殊字符导致 ID 失效
+        const safeId = 'cat-' + btoa(encodeURIComponent(category)).substring(0, 10);
 
-        // 1. 生成侧边栏目录 HTML
+        // 生成目录项
         sideHtml += `
-            <div class="side-nav-item" onclick="scrollToId('${categoryId}')">
-                ${escapeHtml(category)} (${items.length})
+            <div class="side-nav-item" onclick="scrollToCategory('${safeId}')">
+                ${escapeHtml(category)} <small style="opacity:0.6">(${items.length})</small>
             </div>`;
 
-        // 2. 生成主页面内容 HTML
+        // 生成分类区块
         const gridClass = viewMode === 'list' ? 'card-grid list-view' : 'card-grid';
-        html += `
-            <div class="category" id="${categoryId}" style="scroll-margin-top: 80px;">
+        mainHtml += `
+            <div class="category" id="${safeId}">
                 <div class="category-header">
                     <div class="category-title">${escapeHtml(category)}</div>
                 </div>
                 <div class="${gridClass}">
                     ${items.map(site => `
-                        <div class="nav-card" onclick="window.open('${site.url}', '_blank')">
+                        <div class="nav-card" data-id="${site.id}" onclick="window.open('${site.url}', '_blank')">
+                            ${currentUser ? `
+                                <div class="card-actions">
+                                    <button class="card-edit-btn" onclick="event.stopPropagation(); openEditModal('${site.id}')">✏️</button>
+                                    <button class="card-delete-btn" onclick="event.stopPropagation(); openDeleteConfirm('${site.id}')">🗑️</button>
+                                </div>` : ''}
                             <div class="card-icon">${site.icon || '🔗'}</div>
                             <div style="flex:1">
                                 <div class="card-title">${escapeHtml(site.title)}</div>
@@ -728,20 +747,19 @@ function render(dataToRender = sitesData) {
             </div>`;
     });
 
-    categoriesContainer.innerHTML = html;
-    document.getElementById('sideNav').innerHTML = sideHtml;
+    categoriesContainer.innerHTML = mainHtml;
+    sideNav.innerHTML = sideHtml;
 }
 
-// 快速定位函数
-function scrollToId(id) {
-    const el = document.getElementById(id);
-    if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-        // 手机端点击后自动关闭侧边栏
+// 快速定位平滑滚动
+function scrollToCategory(id) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+        // 如果是手机端，点击后自动关闭侧边栏
         if (window.innerWidth < 768) toggleSidebar();
     }
 }
-
 // --- 6. 事件绑定与辅助 ---
 function showToast(msg) {
     const toast = document.createElement('div');
