@@ -415,45 +415,47 @@
     }
     
     // 检查登录状态
-    async function checkAuth() {
-        if (!supabaseClient) return;
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session) {
-            currentUser = session.user;
-            userEmailSpan.textContent = currentUser.email.split('@')[0];
-            loginBtn.style.display = 'none';
-            userInfo.style.display = 'flex';
-            addLinkBtn.style.display = 'inline-flex';
-            await loadLinks();
-        } else {
-            currentUser = null;
-            loginBtn.style.display = 'inline-flex';
-            userInfo.style.display = 'none';
-            addLinkBtn.style.display = 'none';
-            showEmptyState('🔐 请点击右上角"登录"按钮开始使用');
-        }
+   async function checkAuth() {
+    if (!supabaseClient) return;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    
+    // 始终加载数据，让所有人都能看到导航内容
+    await loadLinks();
+
+    if (session) {
+        currentUser = session.user;
+        userEmailSpan.textContent = currentUser.email.split('@')[0];
+        loginBtn.style.display = 'none';
+        userInfo.style.display = 'flex';
+        addLinkBtn.style.display = 'inline-flex';
+    } else {
+        currentUser = null;
+        loginBtn.style.display = 'inline-flex';
+        userInfo.style.display = 'none';
+        addLinkBtn.style.display = 'none';
     }
+}
     
     // 加载链接
-    async function loadLinks() {
-        if (!currentUser) return;
+   async function loadLinks() {
+    // 删掉 if (!currentUser) return; 这一行
+    
+    const { data, error } = await supabaseClient
+        .from('links')
+        .select('*')
+        // 如果你有多个用户，但想展示所有人的，就删掉 .eq('user_id', ...)
+        // 如果只想展示特定管理员的，可以硬编码该管理员的 ID，或者不加过滤
+        .order('created_at', { ascending: false });
         
-        const { data, error } = await supabaseClient
-            .from('links')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .order('created_at', { ascending: false });
-        
-        if (error) {
-            console.error('加载失败:', error);
-            showEmptyState('加载失败，请刷新重试');
-            return;
-        }
-        
-        sitesData = data || [];
-        render();
+    if (error) {
+        console.error('加载失败:', error);
+        showEmptyState('数据加载失败，请检查数据库权限');
+        return;
     }
     
+    sitesData = data || [];
+    render();
+}
     // 删除链接
     async function deleteLink(id) {
         if (!id) return;
@@ -515,20 +517,25 @@
                     <div class="card-grid">
             `;
             
-            items.forEach(site => {
-                html += `
-                    <div class="nav-card" data-id="${site.id}">
-                        <div class="card-actions">
-                            <button class="card-edit-btn" data-id="${site.id}" title="编辑">✏️ 编辑</button>
-                            <button class="card-delete-btn" data-id="${site.id}" title="删除">🗑️ 删除</button>
-                        </div>
-                        <div class="card-icon">${site.icon || '🔗'}</div>
-                        <div class="card-title">${escapeHtml(site.title)}</div>
-                        <div class="card-desc">${escapeHtml(site.description || '')}</div>
-                        <div style="font-size:0.7rem; color:#8a9dad; margin-top:0.5rem;">${getHostname(site.url)}</div>
-                    </div>
-                `;
-            });
+           // 在 items.forEach 循环内部修改
+items.forEach(site => {
+    // 只有当 currentUser 存在时，才生成操作按钮的 HTML
+    const adminActions = currentUser ? `
+        <div class="card-actions">
+            <button class="card-edit-btn" data-id="${site.id}" title="编辑">✏️ 编辑</button>
+            <button class="card-delete-btn" data-id="${site.id}" title="删除">🗑️ 删除</button>
+        </div>` : '';
+
+    html += `
+        <div class="nav-card" data-id="${site.id}">
+            ${adminActions}
+            <div class="card-icon">${site.icon || '🔗'}</div>
+            <div class="card-title">${escapeHtml(site.title)}</div>
+            <div class="card-desc">${escapeHtml(site.description || '')}</div>
+            <div style="font-size:0.7rem; color:#8a9dad; margin-top:0.5rem;">${getHostname(site.url)}</div>
+        </div>
+    `;
+});
             
             html += `</div></div>`;
         }
