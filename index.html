@@ -39,6 +39,45 @@
             padding-bottom: 1.2rem;
             border-bottom: 1px solid rgba(0,0,0,0.05);
         }
+        /* 暗夜模式样式 */
+body.dark-mode {
+    background: #0f1724 !important;
+    color: #eef2ff !important;
+}
+
+body.dark-mode .nav-card {
+    background: #1e2933;
+    border-color: #2d3d4d;
+    color: #eef2ff;
+}
+
+body.dark-mode .card-title { color: #fff; }
+body.dark-mode .card-desc { color: #8a9dad; }
+
+/* 列表视图布局 */
+.card-grid.list-view {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.card-grid.list-view .nav-card {
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 20px;
+    gap: 15px;
+    height: auto;
+}
+
+.card-grid.list-view .card-icon {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+}
+
+.card-grid.list-view .card-actions {
+    top: 50%;
+    transform: translateY(-50%);
+}
 
         h1 {
             font-size: 1.9rem;
@@ -449,6 +488,9 @@ async function loadLinks() {
 }
 
 // 核心渲染函数 (修复搜索和登录状态判断)
+let viewMode = 'grid'; // 默认为网格
+let isDarkMode = false;
+
 function render(dataToRender = sitesData) {
     if (!dataToRender.length) {
         categoriesContainer.innerHTML = `<div class="no-results">✨ 暂无内容</div>`;
@@ -463,16 +505,18 @@ function render(dataToRender = sitesData) {
 
     let html = '';
     for (const [category, items] of Object.entries(groups)) {
+        // 根据 viewMode 决定是否添加 list-view 类
+        const gridClass = viewMode === 'list' ? 'card-grid list-view' : 'card-grid';
+        
         html += `
             <div class="category">
                 <div class="category-header">
                     <div class="category-title">${escapeHtml(category)} (${items.length})</div>
                 </div>
-                <div class="card-grid">
+                <div id="grid-${category}" class="${gridClass}">
         `;
         
         items.forEach(site => {
-            // 严格判断：只有登录后才渲染管理按钮
             const adminActions = currentUser ? `
                 <div class="card-actions">
                     <button class="card-edit-btn" data-id="${site.id}">✏️</button>
@@ -483,8 +527,10 @@ function render(dataToRender = sitesData) {
                 <div class="nav-card" data-id="${site.id}">
                     ${adminActions}
                     <div class="card-icon">${site.icon || '🔗'}</div>
-                    <div class="card-title">${escapeHtml(site.title)}</div>
-                    <div class="card-desc">${escapeHtml(site.description || '')}</div>
+                    <div style="flex:1">
+                        <div class="card-title">${escapeHtml(site.title)}</div>
+                        <div class="card-desc">${escapeHtml(site.description || '')}</div>
+                    </div>
                 </div>
             `;
         });
@@ -611,35 +657,51 @@ document.getElementById('cancelDeleteBtn').onclick = closeDeleteConfirm;
 document.getElementById('confirmDeleteBtn').onclick = executeDelete;
 authForm.onsubmit = (e) => { e.preventDefault(); handleAuth(); };
 document.getElementById('linkForm').onsubmit = (e) => { e.preventDefault(); saveLink(); };
+    // 主题切换
+document.getElementById('themeToggleBtn').onclick = () => {
+    isDarkMode = !isDarkMode;
+    document.body.classList.toggle('dark-mode', isDarkMode);
+    
+    // 更新按钮文字或图标（可选）
+    document.getElementById('themeToggleBtn').innerHTML = isDarkMode ? '☀️ 浅色模式' : '🌙 深色模式';
+    
+    // 保存到本地存储（刷新页面不丢失）
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+};
+
+// 布局切换
+document.getElementById('layoutToggleBtn').onclick = () => {
+    viewMode = (viewMode === 'grid' ? 'list' : 'grid');
+    
+    // 重新调用 render 即可实现布局切换，且保持当前数据
+    render();
+    
+    document.getElementById('layoutToggleBtn').innerHTML = viewMode === 'list' ? '🗂️ 网格视图' : '📋 列表视图';
+};
+
+// 在页面启动时读取缓存的主题
+function applySavedTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        isDarkMode = true;
+        document.body.classList.add('dark-mode');
+        document.getElementById('themeToggleBtn').innerHTML = '☀️ 浅色模式';
+    }
+}
+
+// 修改 start 函数
+async function start() {
+    applySavedTheme(); // 应用主题
+    await initSupabase();
+    await checkAuth();
+}
 
 function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
 }
-     // 主题和布局
-    function applyLayoutClass() {
-        if (isListView) {
-            document.body.classList.add('list-view');
-            layoutBtn.innerHTML = '🗂️ 网格视图';
-        } else {
-            document.body.classList.remove('list-view');
-            layoutBtn.innerHTML = '📋 列表视图';
-        }
-    }
-    
-    function setTheme(dark) {
-        if (dark) {
-            document.body.classList.add('dark');
-            themeBtn.innerHTML = '☀️ 明亮模式';
-        } else {
-            document.body.classList.remove('dark');
-            themeBtn.innerHTML = '🌓 暗色模式';
-        }
-        localStorage.setItem('navThemeDark', dark);
-        isDarkMode = dark;
-    }
-    
+
 
 // 启动
 initSupabase().then(() => checkAuth());
