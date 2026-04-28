@@ -577,14 +577,6 @@ async function handleAuth() {
 }
 
 // 保存逻辑 (加上安全拦截)
-    // 在 insert 之前过滤掉已存在的 URL
-const existingUrls = sitesData.map(s => s.url);
-const uniqueData = dataToInsert.filter(item => !existingUrls.includes(item.url));
-
-if (uniqueData.length === 0) {
-    alert('所有链接已存在，无需导入');
-    return;
-}
 // 然后 insert(uniqueData)
 async function saveLink() {
     if (!currentUser) return alert('权限不足，请先登录');
