@@ -377,51 +377,45 @@
 </div>
 
 <script>
-    // Supabase 配置
-    const SUPABASE_URL = 'https://uehqgiqwvevvevsxxyoe.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlaHFnaXF3dmV2dmV2c3h4eW9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNTUyNDcsImV4cCI6MjA5MjkzMTI0N30.P4pAwMmuDB81izf2HB__AAYQ0mXYIZPQoEtrDHoz8JQ';
-    
-    let supabaseClient = null;
-    let currentUser = null;
-    let sitesData = [];
-    let isLoginMode = true;
-    let currentEditId = null;      // 当前编辑的链接ID
-    let pendingDeleteId = null;     // 待删除的链接ID
-    
-    // DOM 元素
-    const categoriesContainer = document.getElementById('categoriesContainer');
-    const searchInput = document.getElementById('searchInput');
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const addLinkBtn = document.getElementById('addLinkBtn');
-    const userInfo = document.getElementById('userInfo');
-    const userEmailSpan = document.getElementById('userEmail');
-    const loginModal = document.getElementById('loginModal');
-    const linkModal = document.getElementById('linkModal');
-    const confirmModal = document.getElementById('confirmModal');
-    const authForm = document.getElementById('authForm');
-    const authEmail = document.getElementById('authEmail');
-    const authPassword = document.getElementById('authPassword');
-    const authSubmitBtn = document.getElementById('authSubmitBtn');
-    
-    // 初始化 Supabase
-    async function initSupabase() {
-        if (typeof supabase === 'undefined') {
-            console.error('Supabase SDK 未加载');
-            return false;
-        }
-        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        return true;
-    }
-    
-    // 检查登录状态
-   async function checkAuth() {
+// Supabase 配置
+const SUPABASE_URL = 'https://uehqgiqwvevvevsxxyoe.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlaHFnaXF3dmV2dmV2c3h4eW9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNTUyNDcsImV4cCI6MjA5MjkzMTI0N30.P4pAwMmuDB81izf2HB__AAYQ0mXYIZPQoEtrDHoz8JQ';
+
+let supabaseClient = null;
+let currentUser = null;
+let sitesData = [];
+let currentEditId = null;
+let pendingDeleteId = null;
+
+// DOM 元素
+const categoriesContainer = document.getElementById('categoriesContainer');
+const searchInput = document.getElementById('searchInput');
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const addLinkBtn = document.getElementById('addLinkBtn');
+const userInfo = document.getElementById('userInfo');
+const userEmailSpan = document.getElementById('userEmail');
+const loginModal = document.getElementById('loginModal');
+const linkModal = document.getElementById('linkModal');
+const confirmModal = document.getElementById('confirmModal');
+const authForm = document.getElementById('authForm');
+const authEmail = document.getElementById('authEmail');
+const authPassword = document.getElementById('authPassword');
+const authSubmitBtn = document.getElementById('authSubmitBtn');
+
+// 初始化
+async function initSupabase() {
+    if (typeof supabase === 'undefined') return false;
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return true;
+}
+
+// 检查登录状态
+async function checkAuth() {
     if (!supabaseClient) return;
     const { data: { session } } = await supabaseClient.auth.getSession();
     
-    // 始终加载数据，让所有人都能看到导航内容
-    await loadLinks();
-
+    // 更新全局用户信息
     if (session) {
         currentUser = session.user;
         userEmailSpan.textContent = currentUser.email.split('@')[0];
@@ -434,253 +428,93 @@
         userInfo.style.display = 'none';
         addLinkBtn.style.display = 'none';
     }
+    
+    // 状态切换后，务必重新加载并渲染数据以更新 UI
+    await loadLinks();
 }
-    
-    // 加载链接
-   async function loadLinks() {
-    // 删掉 if (!currentUser) return; 这一行
-    
+
+// 数据加载
+async function loadLinks() {
     const { data, error } = await supabaseClient
         .from('links')
         .select('*')
-        // 如果你有多个用户，但想展示所有人的，就删掉 .eq('user_id', ...)
-        // 如果只想展示特定管理员的，可以硬编码该管理员的 ID，或者不加过滤
         .order('created_at', { ascending: false });
         
     if (error) {
         console.error('加载失败:', error);
-        showEmptyState('数据加载失败，请检查数据库权限');
         return;
     }
-    
     sitesData = data || [];
-    render();
+    render(); // 统一调用渲染
 }
-    // 删除链接
-    async function deleteLink(id) {
-        if (!id) return;
-        
-        const { error } = await supabaseClient
-            .from('links')
-            .delete()
-            .eq('id', id);
-        
-        if (error) {
-            alert('删除失败: ' + error.message);
-            return false;
-        }
-        
-        // 重新加载数据
-        await loadLinks();
-        showToast('✅ 已删除');
-        return true;
-    }
-    
-    // 编辑链接
-    async function updateLink(id, linkData) {
-        const { error } = await supabaseClient
-            .from('links')
-            .update(linkData)
-            .eq('id', id);
-        
-        if (error) {
-            alert('更新失败: ' + error.message);
-            return false;
-        }
-        
-        await loadLinks();
-        showToast('✅ 已更新');
-        return true;
-    }
-    
-    // 渲染页面
-    function render() {
-        if (!sitesData.length) {
-            showEmptyState('✨ 暂无链接，点击"新建"添加第一个导航');
-            return;
-        }
-        
-        // 按分类分组
-        const groups = {};
-        sitesData.forEach(site => {
-            if (!groups[site.category]) groups[site.category] = [];
-            groups[site.category].push(site);
-        });
-        
-        let html = '';
-        for (const [category, items] of Object.entries(groups)) {
-            html += `
-                <div class="category">
-                    <div class="category-header">
-                        <div class="category-title">${escapeHtml(category)} <span style="font-size:0.9rem;">(${items.length})</span></div>
-                    </div>
-                    <div class="card-grid">
-            `;
-            
-           // 在 items.forEach 循环内部修改
-items.forEach(site => {
-    // 只有当 currentUser 存在时，才生成操作按钮的 HTML
-    const adminActions = currentUser ? `
-        <div class="card-actions">
-            <button class="card-edit-btn" data-id="${site.id}" title="编辑">✏️ 编辑</button>
-            <button class="card-delete-btn" data-id="${site.id}" title="删除">🗑️ 删除</button>
-        </div>` : '';
 
-    html += `
-        <div class="nav-card" data-id="${site.id}">
-            ${adminActions}
-            <div class="card-icon">${site.icon || '🔗'}</div>
-            <div class="card-title">${escapeHtml(site.title)}</div>
-            <div class="card-desc">${escapeHtml(site.description || '')}</div>
-            <div style="font-size:0.7rem; color:#8a9dad; margin-top:0.5rem;">${getHostname(site.url)}</div>
-        </div>
-    `;
-});
-            
-            html += `</div></div>`;
-        }
-        
-        categoriesContainer.innerHTML = html;
-        
-        // 绑定卡片点击事件（跳转链接）
-        document.querySelectorAll('.nav-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                // 如果点击的是编辑或删除按钮，不触发跳转
-                if (e.target.closest('.card-edit-btn') || e.target.closest('.card-delete-btn')) return;
-                const id = card.getAttribute('data-id');
-                const site = sitesData.find(s => s.id === id);
-                if (site) window.open(site.url, '_blank');
-            });
-        });
-        
-        // 绑定编辑按钮事件
-        document.querySelectorAll('.card-edit-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const id = btn.getAttribute('data-id');
-                openEditModal(id);
-            });
-        });
-        
-        // 绑定删除按钮事件
-        document.querySelectorAll('.card-delete-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const id = btn.getAttribute('data-id');
-                openDeleteConfirm(id);
-            });
-        });
+// 核心渲染函数 (修复搜索和登录状态判断)
+function render(dataToRender = sitesData) {
+    if (!dataToRender.length) {
+        categoriesContainer.innerHTML = `<div class="no-results">✨ 暂无内容</div>`;
+        return;
     }
-    
-    // 打开编辑模态框
-    function openEditModal(id) {
-        const site = sitesData.find(s => s.id === id);
-        if (!site) return;
-        
-        currentEditId = id;
-        document.getElementById('linkModalTitle').textContent = '✏️ 编辑链接';
-        document.getElementById('linkCategory').value = site.category || '';
-        document.getElementById('linkTitle').value = site.title || '';
-        document.getElementById('linkDesc').value = site.description || '';
-        document.getElementById('linkUrl').value = site.url || '';
-        document.getElementById('linkIcon').value = site.icon || '';
-        linkModal.classList.add('show');
-    }
-    
-    // 打开删除确认对话框
-    function openDeleteConfirm(id) {
-        pendingDeleteId = id;
-        const site = sitesData.find(s => s.id === id);
-        if (site) {
-            document.getElementById('confirmMessage').textContent = `确定要删除 "${site.title}" 吗？`;
-        }
-        confirmModal.classList.add('show');
-    }
-    
-    // 关闭删除确认对话框
-    function closeDeleteConfirm() {
-        pendingDeleteId = null;
-        confirmModal.classList.remove('show');
-    }
-    
-    // 执行删除
-    async function executeDelete() {
-        if (pendingDeleteId) {
-            await deleteLink(pendingDeleteId);
-            closeDeleteConfirm();
-        }
-    }
-    
-    // 关闭编辑模态框并重置
-    function closeLinkModal() {
-        currentEditId = null;
-        document.getElementById('linkForm').reset();
-        linkModal.classList.remove('show');
-    }
-    
-    function showEmptyState(message) {
-        categoriesContainer.innerHTML = `<div class="no-results">${message}</div>`;
-    }
-    
-    function showToast(message) {
-        // 简单的提示
-        const toast = document.createElement('div');
-        toast.textContent = message;
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #2c5a6e;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 40px;
-            font-size: 0.85rem;
-            z-index: 2000;
-            animation: fadeOut 2s ease;
+
+    const groups = {};
+    dataToRender.forEach(site => {
+        if (!groups[site.category]) groups[site.category] = [];
+        groups[site.category].push(site);
+    });
+
+    let html = '';
+    for (const [category, items] of Object.entries(groups)) {
+        html += `
+            <div class="category">
+                <div class="category-header">
+                    <div class="category-title">${escapeHtml(category)} (${items.length})</div>
+                </div>
+                <div class="card-grid">
         `;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2000);
-    }
-    
-    // 添加样式动画
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes fadeOut {
-            0% { opacity: 1; }
-            70% { opacity: 1; }
-            100% { opacity: 0; visibility: hidden; }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-    
-    function getHostname(url) {
-        try {
-            return new URL(url).hostname;
-        } catch(e) {
-            return url;
-        }
-    }
-    
-    // 登录/注册
-    // 1. 删除原有的 switchModeBtn 相关事件绑定
-// 2. 修改 handleAuth 函数如下：
+        
+        items.forEach(site => {
+            // 严格判断：只有登录后才渲染管理按钮
+            const adminActions = currentUser ? `
+                <div class="card-actions">
+                    <button class="card-edit-btn" data-id="${site.id}">✏️</button>
+                    <button class="card-delete-btn" data-id="${site.id}">🗑️</button>
+                </div>` : '';
 
+            html += `
+                <div class="nav-card" data-id="${site.id}">
+                    ${adminActions}
+                    <div class="card-icon">${site.icon || '🔗'}</div>
+                    <div class="card-title">${escapeHtml(site.title)}</div>
+                    <div class="card-desc">${escapeHtml(site.description || '')}</div>
+                </div>
+            `;
+        });
+        html += `</div></div>`;
+    }
+    categoriesContainer.innerHTML = html;
+}
+
+// 事件委托 (处理所有点击)
+categoriesContainer.onclick = async (e) => {
+    const editBtn = e.target.closest('.card-edit-btn');
+    const deleteBtn = e.target.closest('.card-delete-btn');
+    const card = e.target.closest('.nav-card');
+
+    if (editBtn) {
+        e.stopPropagation();
+        openEditModal(editBtn.dataset.id);
+    } else if (deleteBtn) {
+        e.stopPropagation();
+        openDeleteConfirm(deleteBtn.dataset.id);
+    } else if (card) {
+        const site = sitesData.find(s => s.id === card.dataset.id);
+        if (site) window.open(site.url, '_blank');
+    }
+};
+
+// 登录处理
 async function handleAuth() {
     const email = authEmail.value;
     const password = authPassword.value;
-    
-    // 直接调用登录接口，不再判断 isLoginMode
     const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
     
     if (error) {
@@ -689,179 +523,103 @@ async function handleAuth() {
     }
     
     loginModal.classList.remove('show');
-    await checkAuth(); // 登录成功后刷新状态并加载数据
+    authForm.reset(); // 清空表单，防止下次打开还有密码
+    await checkAuth();
 }
 
-    // 建议将渲染逻辑封装，减少重复代码
-function createCardHtml(site) {
-    return `
-        <div class="nav-card" data-id="${site.id}">
-            <div class="card-actions">
-                <button class="card-edit-btn" data-id="${site.id}">✏️ 编辑</button>
-                <button class="card-delete-btn" data-id="${site.id}">🗑️ 删除</button>
-            </div>
-            <div class="card-icon">${site.icon || '🔗'}</div>
-            <div class="card-title">${escapeHtml(site.title)}</div>
-            <div class="card-desc">${escapeHtml(site.description || '')}</div>
-        </div>
-    `;
-}
+// 保存逻辑 (加上安全拦截)
+async function saveLink() {
+    if (!currentUser) return alert('权限不足，请先登录');
 
-// 事件委托：处理所有卡片点击
-categoriesContainer.onclick = (e) => {
-    const editBtn = e.target.closest('.card-edit-btn');
-    const deleteBtn = e.target.closest('.card-delete-btn');
-    const card = e.target.closest('.nav-card');
+    const linkData = {
+        category: document.getElementById('linkCategory').value.trim(),
+        title: document.getElementById('linkTitle').value.trim(),
+        description: document.getElementById('linkDesc').value.trim(),
+        url: document.getElementById('linkUrl').value.trim(),
+        icon: document.getElementById('linkIcon').value.trim() || '🔗'
+    };
 
-    if (editBtn) {
-        openEditModal(editBtn.dataset.id);
-    } else if (deleteBtn) {
-        openDeleteConfirm(deleteBtn.dataset.id);
-    } else if (card) {
-        const site = sitesData.find(s => s.id === card.dataset.id);
-        if (site) window.open(site.url, '_blank');
+    if (currentEditId) {
+        await supabaseClient.from('links').update(linkData).eq('id', currentEditId);
+    } else {
+        await supabaseClient.from('links').insert([{ user_id: currentUser.id, ...linkData }]);
     }
-};
     
-    // 添加或更新链接
-    async function saveLink() {
-        const category = document.getElementById('linkCategory').value.trim();
-        const title = document.getElementById('linkTitle').value.trim();
-        const description = document.getElementById('linkDesc').value.trim();
-        const url = document.getElementById('linkUrl').value.trim();
-        const icon = document.getElementById('linkIcon').value.trim() || '🔗';
-        
-        if (!category || !title || !url) {
-            alert('请填写分类、标题和网址');
-            return;
-        }
-        
-        const linkData = {
-            category,
-            title,
-            description,
-            url,
-            icon
-        };
-        
-        if (currentEditId) {
-            // 编辑模式
-            await updateLink(currentEditId, linkData);
-        } else {
-            // 添加模式
-            const { error } = await supabaseClient.from('links').insert([{
-                user_id: currentUser.id,
-                ...linkData
-            }]);
-            
-            if (error) {
-                alert('添加失败: ' + error.message);
-                return;
-            }
-            showToast('✅ 已添加');
-        }
-        
-        closeLinkModal();
+    closeLinkModal();
+    await loadLinks();
+}
+
+// 删除逻辑
+async function executeDelete() {
+    if (!currentUser) return;
+    if (pendingDeleteId) {
+        await supabaseClient.from('links').delete().eq('id', pendingDeleteId);
+        closeDeleteConfirm();
         await loadLinks();
     }
-    
-    // 事件绑定
-    loginBtn.onclick = () => loginModal.classList.add('show');
-    logoutBtn.onclick = async () => {
-        await supabaseClient.auth.signOut();
-        await checkAuth();
-    };
-    addLinkBtn.onclick = () => {
-        currentEditId = null;
-        document.getElementById('linkModalTitle').textContent = '➕ 添加链接';
-        document.getElementById('linkForm').reset();
-        linkModal.classList.add('show');
-    };
-    
-    document.getElementById('closeLoginModal').onclick = () => loginModal.classList.remove('show');
-    document.getElementById('closeLinkModal').onclick = closeLinkModal;
-    document.getElementById('cancelDeleteBtn').onclick = closeDeleteConfirm;
-    document.getElementById('confirmDeleteBtn').onclick = executeDelete;
-    
-    // 点击模态框背景关闭
-    confirmModal.onclick = (e) => { if(e.target === confirmModal) closeDeleteConfirm(); };
-    loginModal.onclick = (e) => { if(e.target === loginModal) loginModal.classList.remove('show'); };
-    linkModal.onclick = (e) => { if(e.target === linkModal) closeLinkModal(); };
+}
 
-    
-    authForm.onsubmit = (e) => {
-        e.preventDefault();
-        handleAuth();
-    };
-    
-    document.getElementById('linkForm').onsubmit = (e) => {
-        e.preventDefault();
-        saveLink();
-    };
-    
-    searchInput.oninput = (e) => {
-        const keyword = e.target.value.toLowerCase();
-        if (!keyword) {
-            render();
-            return;
-        }
-        const filtered = sitesData.filter(site => 
-            site.title.toLowerCase().includes(keyword) ||
-            (site.description && site.description.toLowerCase().includes(keyword)) ||
-            site.category.toLowerCase().includes(keyword)
-        );
-        
-        if (filtered.length === 0) {
-            categoriesContainer.innerHTML = '<div class="no-results">🔍 没有找到相关链接</div>';
-        } else {
-            const groups = {};
-            filtered.forEach(site => {
-                if (!groups[site.category]) groups[site.category] = [];
-                groups[site.category].push(site);
-            });
-            let html = '';
-            for (const [category, items] of Object.entries(groups)) {
-                html += `<div class="category"><div class="category-header"><div class="category-title">${category} (${items.length})</div></div><div class="card-grid">`;
-                items.forEach(site => {
-                    html += `<div class="nav-card"><div class="card-icon">${site.icon || '🔗'}</div><div class="card-title">${escapeHtml(site.title)}</div><div class="card-desc">${escapeHtml(site.description || '')}</div></div>`;
-                });
-                html += `</div></div>`;
-            }
-            categoriesContainer.innerHTML = html;
-        }
-    };
-    
-    // 主题切换
-    let isDark = false;
-    document.getElementById('themeToggleBtn').onclick = () => {
-        isDark = !isDark;
-        document.body.style.background = isDark ? '#0f1724' : 'linear-gradient(145deg, #f5f7fc 0%, #eef2f8 100%)';
-        document.body.style.color = isDark ? '#eef2ff' : '#1a2c3e';
-        
-        // 简单设置卡片背景
-        const cards = document.querySelectorAll('.nav-card');
-        cards.forEach(card => {
-            card.style.background = isDark ? '#1e2933' : 'white';
-            card.style.color = isDark ? '#eef2ff' : '#1a2c3e';
-        });
-    };
-    
-    // 布局切换
-    let isList = false;
-    document.getElementById('layoutToggleBtn').onclick = () => {
-        isList = !isList;
-        const grid = document.querySelector('.card-grid');
-        if (grid) grid.style.display = isList ? 'flex' : 'grid';
-        document.getElementById('layoutToggleBtn').textContent = isList ? '🗂️ 网格视图' : '📋 列表视图';
-    };
-    
-    // 启动
-    async function start() {
-        await initSupabase();
-        await checkAuth();
-    }
-    
-    start();
+// 其他辅助函数 (保持原样但确保被调用)
+function openEditModal(id) {
+    const site = sitesData.find(s => s.id === id);
+    if (!site) return;
+    currentEditId = id;
+    document.getElementById('linkModalTitle').textContent = '✏️ 编辑链接';
+    document.getElementById('linkCategory').value = site.category;
+    document.getElementById('linkTitle').value = site.title;
+    document.getElementById('linkDesc').value = site.description;
+    document.getElementById('linkUrl').value = site.url;
+    document.getElementById('linkIcon').value = site.icon;
+    linkModal.classList.add('show');
+}
+
+function openDeleteConfirm(id) {
+    pendingDeleteId = id;
+    confirmModal.classList.add('show');
+}
+
+function closeDeleteConfirm() { confirmModal.classList.remove('show'); }
+function closeLinkModal() { linkModal.classList.remove('show'); currentEditId = null; }
+
+// 搜索逻辑 (修复搜索时按钮不消失的问题)
+searchInput.oninput = (e) => {
+    const keyword = e.target.value.toLowerCase();
+    const filtered = sitesData.filter(site => 
+        site.title.toLowerCase().includes(keyword) || 
+        site.category.toLowerCase().includes(keyword)
+    );
+    render(filtered); // 同样调用统一的渲染函数
+};
+
+// 基础事件
+loginBtn.onclick = () => loginModal.classList.add('show');
+logoutBtn.onclick = async () => {
+    await supabaseClient.auth.signOut();
+    authEmail.value = ''; // 退出时手动清空账号内容
+    authPassword.value = '';
+    await checkAuth();
+};
+addLinkBtn.onclick = () => {
+    currentEditId = null;
+    document.getElementById('linkForm').reset();
+    linkModal.classList.add('show');
+};
+
+document.getElementById('closeLoginModal').onclick = () => loginModal.classList.remove('show');
+document.getElementById('closeLinkModal').onclick = closeLinkModal;
+document.getElementById('cancelDeleteBtn').onclick = closeDeleteConfirm;
+document.getElementById('confirmDeleteBtn').onclick = executeDelete;
+authForm.onsubmit = (e) => { e.preventDefault(); handleAuth(); };
+document.getElementById('linkForm').onsubmit = (e) => { e.preventDefault(); saveLink(); };
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// 启动
+initSupabase().then(() => checkAuth());
 </script>
 </body>
 </html>
