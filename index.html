@@ -419,7 +419,6 @@ body.dark-mode .card-desc { color: #8a9dad; }
 </div>
 
 <script>
-// Supabase 配置
 const SUPABASE_URL = 'https://uehqgiqwvevvevsxxyoe.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlaHFnaXF3dmV2dmV2c3h4eW9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNTUyNDcsImV4cCI6MjA5MjkzMTI0N30.P4pAwMmuDB81izf2HB__AAYQ0mXYIZPQoEtrDHoz8JQ';
 
@@ -428,8 +427,10 @@ let currentUser = null;
 let sitesData = [];
 let currentEditId = null;
 let pendingDeleteId = null;
+let viewMode = 'grid'; 
+let isDarkMode = false;
 
-// DOM 元素
+// --- 2. DOM 元素获取 ---
 const categoriesContainer = document.getElementById('categoriesContainer');
 const searchInput = document.getElementById('searchInput');
 const loginBtn = document.getElementById('loginBtn');
@@ -443,21 +444,21 @@ const confirmModal = document.getElementById('confirmModal');
 const authForm = document.getElementById('authForm');
 const authEmail = document.getElementById('authEmail');
 const authPassword = document.getElementById('authPassword');
-const authSubmitBtn = document.getElementById('authSubmitBtn');
+const exportBtn = document.getElementById('exportBtn');
+const importBtn = document.getElementById('importBtn');
+const importFile = document.getElementById('importFile');
 
-// 初始化
+// --- 3. 初始化与权限控制 ---
 async function initSupabase() {
     if (typeof supabase === 'undefined') return false;
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     return true;
 }
 
-// 检查登录状态
 async function checkAuth() {
     if (!supabaseClient) return;
     const { data: { session } } = await supabaseClient.auth.getSession();
     
-    // 更新全局用户信息
     if (session) {
         currentUser = session.user;
         userEmailSpan.textContent = currentUser.email.split('@')[0];
@@ -470,117 +471,23 @@ async function checkAuth() {
         userInfo.style.display = 'none';
         addLinkBtn.style.display = 'none';
     }
-    
-    // 状态切换后，务必重新加载并渲染数据以更新 UI
     await loadLinks();
 }
 
-// 数据加载
+// --- 4. 数据操作 (CRUD & 导入导出) ---
 async function loadLinks() {
     const { data, error } = await supabaseClient
         .from('links')
         .select('*')
         .order('created_at', { ascending: false });
         
-    if (error) {
-        console.error('加载失败:', error);
-        return;
-    }
+    if (error) return console.error('加载失败:', error);
     sitesData = data || [];
-    render(); // 统一调用渲染
+    render();
 }
 
-// 核心渲染函数 (修复搜索和登录状态判断)
-let viewMode = 'grid'; // 默认为网格
-let isDarkMode = false;
-
-function render(dataToRender = sitesData) {
-    if (!dataToRender.length) {
-        categoriesContainer.innerHTML = `<div class="no-results">✨ 暂无内容</div>`;
-        return;
-    }
-
-    const groups = {};
-    dataToRender.forEach(site => {
-        if (!groups[site.category]) groups[site.category] = [];
-        groups[site.category].push(site);
-    });
-
-    let html = '';
-    for (const [category, items] of Object.entries(groups)) {
-        // 根据 viewMode 决定是否添加 list-view 类
-        const gridClass = viewMode === 'list' ? 'card-grid list-view' : 'card-grid';
-        
-        html += `
-            <div class="category">
-                <div class="category-header">
-                    <div class="category-title">${escapeHtml(category)} (${items.length})</div>
-                </div>
-                <div id="grid-${category}" class="${gridClass}">
-        `;
-        
-        items.forEach(site => {
-            const adminActions = currentUser ? `
-                <div class="card-actions">
-                    <button class="card-edit-btn" data-id="${site.id}">✏️</button>
-                    <button class="card-delete-btn" data-id="${site.id}">🗑️</button>
-                </div>` : '';
-
-            html += `
-                <div class="nav-card" data-id="${site.id}">
-                    ${adminActions}
-                    <div class="card-icon">${site.icon || '🔗'}</div>
-                    <div style="flex:1">
-                        <div class="card-title">${escapeHtml(site.title)}</div>
-                        <div class="card-desc">${escapeHtml(site.description || '')}</div>
-                    </div>
-                </div>
-            `;
-        });
-        html += `</div></div>`;
-    }
-    categoriesContainer.innerHTML = html;
-}
-
-// 事件委托 (处理所有点击)
-categoriesContainer.onclick = async (e) => {
-    const editBtn = e.target.closest('.card-edit-btn');
-    const deleteBtn = e.target.closest('.card-delete-btn');
-    const card = e.target.closest('.nav-card');
-
-    if (editBtn) {
-        e.stopPropagation();
-        openEditModal(editBtn.dataset.id);
-    } else if (deleteBtn) {
-        e.stopPropagation();
-        openDeleteConfirm(deleteBtn.dataset.id);
-    } else if (card) {
-        const site = sitesData.find(s => s.id === card.dataset.id);
-        if (site) window.open(site.url, '_blank');
-    }
-};
-
-// 登录处理
-async function handleAuth() {
-    const email = authEmail.value;
-    const password = authPassword.value;
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    
-    if (error) {
-        alert('登录失败：账号或密码错误');
-        return;
-    }
-    
-    loginModal.classList.remove('show');
-    authForm.reset(); // 清空表单，防止下次打开还有密码
-    await checkAuth();
-}
-
-// 保存逻辑 (加上安全拦截)
-// 然后 insert(uniqueData)
 async function saveLink() {
     if (!currentUser) return alert('权限不足，请先登录');
-
     const linkData = {
         category: document.getElementById('linkCategory').value.trim(),
         title: document.getElementById('linkTitle').value.trim(),
@@ -589,27 +496,149 @@ async function saveLink() {
         icon: document.getElementById('linkIcon').value.trim() || '🔗'
     };
 
-    if (currentEditId) {
-        await supabaseClient.from('links').update(linkData).eq('id', currentEditId);
-    } else {
-        await supabaseClient.from('links').insert([{ user_id: currentUser.id, ...linkData }]);
+    const { error } = currentEditId 
+        ? await supabaseClient.from('links').update(linkData).eq('id', currentEditId)
+        : await supabaseClient.from('links').insert([{ user_id: currentUser.id, ...linkData }]);
+
+    if (error) alert('保存失败: ' + error.message);
+    else {
+        showToast(currentEditId ? '✅ 已更新' : '✅ 已添加');
+        closeLinkModal();
+        await loadLinks();
     }
-    
-    closeLinkModal();
-    await loadLinks();
 }
 
-// 删除逻辑
 async function executeDelete() {
-    if (!currentUser) return;
-    if (pendingDeleteId) {
-        await supabaseClient.from('links').delete().eq('id', pendingDeleteId);
+    if (!currentUser || !pendingDeleteId) return;
+    const { error } = await supabaseClient.from('links').delete().eq('id', pendingDeleteId);
+    if (error) alert('删除失败');
+    else {
+        showToast('🗑️ 已删除');
         closeDeleteConfirm();
         await loadLinks();
     }
 }
 
-// 其他辅助函数 (保持原样但确保被调用)
+// 批量导入
+importFile.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !currentUser) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+        try {
+            const json = JSON.parse(event.target.result);
+            if (!Array.isArray(json)) throw new Error('格式错误');
+            if (!confirm(`确认导入 ${json.length} 条数据？`)) return;
+
+            const dataToInsert = json.map(item => ({ ...item, user_id: currentUser.id }));
+            const { error } = await supabaseClient.from('links').insert(dataToInsert);
+            if (error) throw error;
+            showToast('✅ 批量导入成功');
+            await loadLinks();
+        } catch (err) { alert('导入失败: ' + err.message); }
+        importFile.value = '';
+    };
+    reader.readAsText(file);
+};
+
+// 导出
+exportBtn.onclick = () => {
+    const exportData = sitesData.map(({ category, title, description, url, icon }) => ({
+        category, title, description, url, icon
+    }));
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `nav_backup_${new Date().toLocaleDateString()}.json`;
+    a.click();
+};
+
+// --- 5. UI 渲染 ---
+function render(dataToRender = sitesData) {
+    if (!dataToRender.length) {
+        categoriesContainer.innerHTML = `<div class="no-results">✨ 暂无内容</div>`;
+        return;
+    }
+    const groups = {};
+    dataToRender.forEach(site => {
+        if (!groups[site.category]) groups[site.category] = [];
+        groups[site.category].push(site);
+    });
+
+    let html = '';
+    for (const [category, items] of Object.entries(groups)) {
+        const gridClass = viewMode === 'list' ? 'card-grid list-view' : 'card-grid';
+        html += `<div class="category">
+            <div class="category-header"><div class="category-title">${escapeHtml(category)} (${items.length})</div></div>
+            <div class="${gridClass}">`;
+        items.forEach(site => {
+            const adminActions = currentUser ? `
+                <div class="card-actions">
+                    <button class="card-edit-btn" data-id="${site.id}">✏️</button>
+                    <button class="card-delete-btn" data-id="${site.id}">🗑️</button>
+                </div>` : '';
+            html += `
+                <div class="nav-card" data-id="${site.id}">
+                    ${adminActions}
+                    <div class="card-icon">${site.icon || '🔗'}</div>
+                    <div style="flex:1">
+                        <div class="card-title">${escapeHtml(site.title)}</div>
+                        <div class="card-desc">${escapeHtml(site.description || '')}</div>
+                    </div>
+                </div>`;
+        });
+        html += `</div></div>`;
+    }
+    categoriesContainer.innerHTML = html;
+}
+
+// --- 6. 事件绑定与辅助 ---
+function showToast(msg) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-message'; // 需在CSS中定义样式
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// 基础交互
+categoriesContainer.onclick = (e) => {
+    const editBtn = e.target.closest('.card-edit-btn');
+    const deleteBtn = e.target.closest('.card-delete-btn');
+    const card = e.target.closest('.nav-card');
+    if (editBtn) openEditModal(editBtn.dataset.id);
+    else if (deleteBtn) openDeleteConfirm(deleteBtn.dataset.id);
+    else if (card) {
+        const site = sitesData.find(s => s.id === card.dataset.id);
+        if (site) window.open(site.url, '_blank');
+    }
+};
+
+document.getElementById('layoutToggleBtn').onclick = () => {
+    viewMode = (viewMode === 'grid' ? 'list' : 'grid');
+    document.getElementById('layoutToggleBtn').innerHTML = viewMode === 'list' ? '🗂️ 网格' : '📋 列表';
+    render();
+};
+
+document.getElementById('themeToggleBtn').onclick = () => {
+    isDarkMode = !isDarkMode;
+    document.body.classList.toggle('dark-mode', isDarkMode);
+    document.getElementById('themeToggleBtn').innerHTML = isDarkMode ? '☀️ 浅色' : '🌙 深色';
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+};
+
+searchInput.oninput = (e) => {
+    const kw = e.target.value.toLowerCase();
+    render(sitesData.filter(s => s.title.toLowerCase().includes(kw) || s.category.toLowerCase().includes(kw)));
+};
+
+// 模态框控制
 function openEditModal(id) {
     const site = sitesData.find(s => s.id === id);
     if (!site) return;
@@ -622,162 +651,32 @@ function openEditModal(id) {
     document.getElementById('linkIcon').value = site.icon;
     linkModal.classList.add('show');
 }
-
-function openDeleteConfirm(id) {
-    pendingDeleteId = id;
-    confirmModal.classList.add('show');
-}
-
-function closeDeleteConfirm() { confirmModal.classList.remove('show'); }
 function closeLinkModal() { linkModal.classList.remove('show'); currentEditId = null; }
+function openDeleteConfirm(id) { pendingDeleteId = id; confirmModal.classList.add('show'); }
+function closeDeleteConfirm() { confirmModal.classList.remove('show'); }
 
-// 搜索逻辑 (修复搜索时按钮不消失的问题)
-searchInput.oninput = (e) => {
-    const keyword = e.target.value.toLowerCase();
-    const filtered = sitesData.filter(site => 
-        site.title.toLowerCase().includes(keyword) || 
-        site.category.toLowerCase().includes(keyword)
-    );
-    render(filtered); // 同样调用统一的渲染函数
-};
-
-// 基础事件
+// 按钮点击
 loginBtn.onclick = () => loginModal.classList.add('show');
-logoutBtn.onclick = async () => {
-    await supabaseClient.auth.signOut();
-    authEmail.value = ''; // 退出时手动清空账号内容
-    authPassword.value = '';
-    await checkAuth();
-};
-addLinkBtn.onclick = () => {
-    currentEditId = null;
-    document.getElementById('linkForm').reset();
-    linkModal.classList.add('show');
-};
-
-document.getElementById('closeLoginModal').onclick = () => loginModal.classList.remove('show');
-document.getElementById('closeLinkModal').onclick = closeLinkModal;
-document.getElementById('cancelDeleteBtn').onclick = closeDeleteConfirm;
-document.getElementById('confirmDeleteBtn').onclick = executeDelete;
+addLinkBtn.onclick = () => { currentEditId = null; document.getElementById('linkForm').reset(); linkModal.classList.add('show'); };
+importBtn.onclick = () => importFile.click();
+logoutBtn.onclick = async () => { await supabaseClient.auth.signOut(); checkAuth(); };
 authForm.onsubmit = (e) => { e.preventDefault(); handleAuth(); };
 document.getElementById('linkForm').onsubmit = (e) => { e.preventDefault(); saveLink(); };
-    // 主题切换
-document.getElementById('themeToggleBtn').onclick = () => {
-    isDarkMode = !isDarkMode;
-    document.body.classList.toggle('dark-mode', isDarkMode);
-    
-    // 更新按钮文字或图标（可选）
-    document.getElementById('themeToggleBtn').innerHTML = isDarkMode ? '☀️ 浅色模式' : '🌙 深色模式';
-    
-    // 保存到本地存储（刷新页面不丢失）
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-};
-// 导出 JSON 功能
-document.getElementById('exportBtn').onclick = () => {
-    if (!sitesData.length) return alert('没有可导出的数据');
+document.getElementById('confirmDeleteBtn').onclick = executeDelete;
+document.getElementById('cancelDeleteBtn').onclick = closeDeleteConfirm;
 
-    // 格式化数据，只保留你要求的字段
-    const exportData = sitesData.map(({ category, title, description, url, icon }) => ({
-        category,
-        title,
-        description,
-        url,
-        icon
-    }));
-
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `nav_backup_${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast('🚀 导出成功');
-};
-
-const importBtn = document.getElementById('importBtn');
-const importFile = document.getElementById('importFile');
-
-// 点击导入按钮触发文件选择
-importBtn.onclick = () => importFile.click();
-
-// 处理文件读取和上传
-importFile.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-        try {
-            const json = JSON.parse(event.target.result);
-            if (!Array.isArray(json)) throw new Error('JSON 格式必须是数组');
-
-            const confirmImport = confirm(`确定要批量导入 ${json.length} 个链接吗？`);
-            if (!confirmImport) return;
-
-            // 为每个条目添加当前用户的 user_id
-            const dataToInsert = json.map(item => ({
-                ...item,
-                user_id: currentUser.id
-            }));
-
-            // 批量插入 Supabase
-            const { error } = await supabaseClient
-                .from('links')
-                .insert(dataToInsert);
-
-            if (error) throw error;
-
-            showToast(`✅ 成功导入 ${json.length} 条数据`);
-            await loadLinks(); // 刷新页面数据
-        } catch (err) {
-            console.error(err);
-            alert('导入失败：' + err.message);
-        } finally {
-            importFile.value = ''; // 清除文件选择，方便下次操作
-        }
-    };
-    reader.readAsText(file);
-};
-
-// 布局切换
-document.getElementById('layoutToggleBtn').onclick = () => {
-    viewMode = (viewMode === 'grid' ? 'list' : 'grid');
-    
-    // 重新调用 render 即可实现布局切换，且保持当前数据
-    render();
-    
-    document.getElementById('layoutToggleBtn').innerHTML = viewMode === 'list' ? '🗂️ 网格视图' : '📋 列表视图';
-};
-
-// 在页面启动时读取缓存的主题
-function applySavedTheme() {
+// --- 7. 启动 ---
+async function start() {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
         isDarkMode = true;
         document.body.classList.add('dark-mode');
-        document.getElementById('themeToggleBtn').innerHTML = '☀️ 浅色模式';
     }
-}
-
-// 修改 start 函数
-async function start() {
-    applySavedTheme(); // 应用主题
     await initSupabase();
     await checkAuth();
 }
 
-function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-}
-
-
-// 启动
-initSupabase().then(() => checkAuth());
+start();
 </script>
 </body>
 </html>
