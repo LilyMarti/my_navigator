@@ -402,7 +402,6 @@
     const authForm = document.getElementById('authForm');
     const authEmail = document.getElementById('authEmail');
     const authPassword = document.getElementById('authPassword');
-    const switchModeBtn = document.getElementById('switchModeBtn');
     const authSubmitBtn = document.getElementById('authSubmitBtn');
     
     // 初始化 Supabase
@@ -781,12 +780,7 @@ categoriesContainer.onclick = (e) => {
     confirmModal.onclick = (e) => { if(e.target === confirmModal) closeDeleteConfirm(); };
     loginModal.onclick = (e) => { if(e.target === loginModal) loginModal.classList.remove('show'); };
     linkModal.onclick = (e) => { if(e.target === linkModal) closeLinkModal(); };
-    
-    switchModeBtn.onclick = () => {
-        isLoginMode = !isLoginMode;
-        switchModeBtn.textContent = isLoginMode ? '注册新账号' : '返回登录';
-        authSubmitBtn.textContent = isLoginMode ? '登录' : '注册';
-    };
+
     
     authForm.onsubmit = (e) => {
         e.preventDefault();
