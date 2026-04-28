@@ -617,6 +617,29 @@ function escapeHtml(str) {
     div.textContent = str;
     return div.innerHTML;
 }
+     // 主题和布局
+    function applyLayoutClass() {
+        if (isListView) {
+            document.body.classList.add('list-view');
+            layoutBtn.innerHTML = '🗂️ 网格视图';
+        } else {
+            document.body.classList.remove('list-view');
+            layoutBtn.innerHTML = '📋 列表视图';
+        }
+    }
+    
+    function setTheme(dark) {
+        if (dark) {
+            document.body.classList.add('dark');
+            themeBtn.innerHTML = '☀️ 明亮模式';
+        } else {
+            document.body.classList.remove('dark');
+            themeBtn.innerHTML = '🌓 暗色模式';
+        }
+        localStorage.setItem('navThemeDark', dark);
+        isDarkMode = dark;
+    }
+    
 
 // 启动
 initSupabase().then(() => checkAuth());
