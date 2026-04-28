@@ -334,6 +334,9 @@ body.dark-mode .card-desc { color: #8a9dad; }
                 <button id="loginBtn">🔐 登录</button>
                 <span id="userInfo" style="display: none;">
                     <span id="userEmail"></span>
+                    <button id="exportBtn" class="btn-secondary" title="导出 JSON">📤 导出</button>
+    <button id="importBtn" class="btn-secondary" title="导入 JSON">📥 导入</button>
+    <input type="file" id="importFile" accept=".json" style="display: none;">
                     <button id="logoutBtn">🚪 退出</button>
                 </span>
             </div>
@@ -574,6 +577,15 @@ async function handleAuth() {
 }
 
 // 保存逻辑 (加上安全拦截)
+    // 在 insert 之前过滤掉已存在的 URL
+const existingUrls = sitesData.map(s => s.url);
+const uniqueData = dataToInsert.filter(item => !existingUrls.includes(item.url));
+
+if (uniqueData.length === 0) {
+    alert('所有链接已存在，无需导入');
+    return;
+}
+// 然后 insert(uniqueData)
 async function saveLink() {
     if (!currentUser) return alert('权限不足，请先登录');
 
@@ -667,6 +679,75 @@ document.getElementById('themeToggleBtn').onclick = () => {
     
     // 保存到本地存储（刷新页面不丢失）
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+};
+// 导出 JSON 功能
+document.getElementById('exportBtn').onclick = () => {
+    if (!sitesData.length) return alert('没有可导出的数据');
+
+    // 格式化数据，只保留你要求的字段
+    const exportData = sitesData.map(({ category, title, description, url, icon }) => ({
+        category,
+        title,
+        description,
+        url,
+        icon
+    }));
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `nav_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('🚀 导出成功');
+};
+
+const importBtn = document.getElementById('importBtn');
+const importFile = document.getElementById('importFile');
+
+// 点击导入按钮触发文件选择
+importBtn.onclick = () => importFile.click();
+
+// 处理文件读取和上传
+importFile.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+        try {
+            const json = JSON.parse(event.target.result);
+            if (!Array.isArray(json)) throw new Error('JSON 格式必须是数组');
+
+            const confirmImport = confirm(`确定要批量导入 ${json.length} 个链接吗？`);
+            if (!confirmImport) return;
+
+            // 为每个条目添加当前用户的 user_id
+            const dataToInsert = json.map(item => ({
+                ...item,
+                user_id: currentUser.id
+            }));
+
+            // 批量插入 Supabase
+            const { error } = await supabaseClient
+                .from('links')
+                .insert(dataToInsert);
+
+            if (error) throw error;
+
+            showToast(`✅ 成功导入 ${json.length} 条数据`);
+            await loadLinks(); // 刷新页面数据
+        } catch (err) {
+            console.error(err);
+            alert('导入失败：' + err.message);
+        } finally {
+            importFile.value = ''; // 清除文件选择，方便下次操作
+        }
+    };
+    reader.readAsText(file);
 };
 
 // 布局切换
