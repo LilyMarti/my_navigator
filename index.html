@@ -495,8 +495,10 @@ body.dark-mode .side-nav-item:hover { background: #334155; }
                 <button type="submit" class="btn-primary" id="authSubmitBtn" style="width: 100%;">登录</button>
             </div>
         </form>
-       <button type="button" onclick="closeLoginModalFunc()" style="margin-top: 1rem; width: 100%; border: none; background: none; color: #8a9dad; cursor: pointer;">取消</button>
-    </div>
+        <button type="button" id="closeLoginModal" onclick="document.getElementById('loginModal').classList.remove('show')">
+    取消
+</button>
+      </div>
 </div>
 
 <!-- 添加/编辑链接模态框 -->
