@@ -4,6 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>我的灵动导航 | Supabase 云同步版</title>
+
+<!-- 确保这行代码存在 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+    // 立即初始化全局客户端
+    const SUPABASE_URL = 'https://uehqgiqwvevvevsxxyoe.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlaHFnaXF3dmV2dmV2c3h4eW9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNTUyNDcsImV4cCI6MjA5MjkzMTI0N30.P4pAwMmuDB81izf2HB__AAYQ0mXYIZPQoEtrDHoz8JQ';
+    
+    // 等待 SDK 加载完成后创建客户端
+    window.addEventListener('load', () => {
+        if (typeof supabase !== 'undefined') {
+            window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('✅ Supabase 客户端已就绪');
+        }
+    });
+</script>
     <style>
         * {
             margin: 0;
