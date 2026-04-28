@@ -640,7 +640,16 @@ async function handleAuth() {
         alert('登录失败：账号或密码错误');
     }
 }
-
+window.onclick = function(event) {
+    const loginModal = document.getElementById('loginModal');
+    const linkModal = document.getElementById('linkModal');
+    const confirmModal = document.getElementById('confirmModal');
+    
+    // 如果点击的是模态框背景（即那个半透明黑底）
+    if (event.target == loginModal) closeLoginModalFunc();
+    if (event.target == linkModal) closeLinkModal();
+    if (event.target == confirmModal) closeDeleteConfirm();
+}
 // --- 4. 数据操作 (CRUD & 导入导出) ---
 async function loadLinks() {
     const { data, error } = await supabaseClient
