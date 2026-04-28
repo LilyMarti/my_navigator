@@ -403,6 +403,34 @@ body.dark-mode .side-nav-item:hover {
 .category {
     scroll-margin-top: 100px;
 }
+.menu-btn {
+    position: fixed;     /* 关键：相对于浏览器窗口定位 */
+    left: 20px;          /* 距离左边 20 像素 */
+    top: 50%;            /* 位于页面垂直中央 */
+    transform: translateY(-50%); /* 向上偏移自身一半的高度，实现完美居中 */
+    
+    width: 45px;
+    height: 90px;        /* 调整为长椭圆形更像挂件 */
+    background: #2d5a6e;
+    color: white;
+    border: none;
+    border-radius: 0 10px 10px 0; /* 左侧直角贴边，右侧圆角 */
+    cursor: pointer;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.15);
+    z-index: 999;        /* 确保在最上层，但低于侧边栏的 1001 */
+    writing-mode: vertical-rl; /* 文字竖排显示 */
+    text-orientation: upright;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.menu-btn:hover {
+    left: 25px; /* 悬停时稍微往右探头 */
+    background: #3a758f;
+}
 /* 暗黑模式适配 */
 body.dark-mode .sidebar { background: #1e293b; color: white; }
 body.dark-mode .side-nav-item:hover { background: #334155; }
