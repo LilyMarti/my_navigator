@@ -308,3 +308,19 @@
     }
 }
 
+@media print {
+    /* 强制简历容器在导出时保持 A4 的物理宽度 */
+    #resume-content {
+        width: 210mm !important;
+        min-height: 297mm !important;
+        transform: none !important; /* 取消任何移动端的缩放 */
+        position: static !important;
+    }
+}
+
+/* 针对 html2pdf 渲染时的临时状态修复 */
+.html2pdf__container #resume-content {
+    width: 210mm !important;
+    padding: 40px !important; /* 确保内边距固定 */
+}
+
