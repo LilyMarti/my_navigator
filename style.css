@@ -68,7 +68,7 @@
 
 /* 5. 海军蓝政企风 */
 .tpl-navy .resume-header {
-    background: #1e3a8a; /* 海军蓝 */
+    background:var(--primary-color); /* 海军蓝 */
     margin: -40px -50px 30px -50px; /* 撑满顶部 */
     padding: 40px 50px;
     color:white !important;
@@ -76,11 +76,11 @@
 
 .tpl-navy #outName { color: white !important; }
 .tpl-navy #header-meta { color: #d1d5db !important; }
-.tpl-navy .info-label { color: #93c5fd !important; } /* 浅蓝色标签 */
+.tpl-navy .info-label { color: #0c0c0c !important; } /* 浅蓝色标签 */
 
 .tpl-navy .section-title {
     color: #1e3a8a;
-    border-bottom: 2px solid #1e3a8a;
+    border-bottom: 2px solid var(--primary-color);
 }
 
 /* 6. 优雅米色风格 */
