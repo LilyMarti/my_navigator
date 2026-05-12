@@ -284,10 +284,40 @@ function switchView(target) {
 }
 
 
-  function exportPDF() {
-        const el = document.getElementById('resume-content');
-        html2pdf().set({ margin: 0, filename: 'resume.pdf', html2canvas: { scale: 3 }, jsPDF: { format: 'a4', orientation: 'portrait' } }).from(el).save();
-    }
+//   function exportPDF() {
+//         const el = document.getElementById('resume-content');
+//         html2pdf().set({ margin: 0, filename: 'resume.pdf', html2canvas: { scale: 3 }, jsPDF: { format: 'a4', orientation: 'portrait' } }).from(el).save();
+//     }
 
+function exportPDF() {
+    const el = document.getElementById('resume-content');
+    
+    // 强制先清理一下可能影响高度的临时样式
+    el.style.height = 'auto';
+
+    const opt = {
+        margin: 0,
+        filename: '我的简历.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+            scale: 2, 
+            useCORS: true,
+            windowWidth: 800,
+            scrollY: 0, // 核心：防止因为页面滚动导致的截图偏移
+        },
+        jsPDF: { 
+            unit: 'mm', 
+            format: 'a4', 
+            orientation: 'portrait' 
+        },
+        // 关键：自动分页逻辑，防止下半部分被遮挡或截断
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    html2pdf().set(opt).from(el).save().then(() => {
+        // 导出完成后恢复可能的样式（如果需要）
+        el.style.height = ''; 
+    });
+}
 //     // 初始化内容
     addItem('exp'); addItem('edu');
