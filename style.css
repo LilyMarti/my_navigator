@@ -828,3 +828,66 @@ input:focus, textarea:focus {
     padding: 40px 50px;
   }
 }
+/* 底部导航栏样式 - 确保固定在底部 */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;              /* 添加 right: 0 确保完全铺满宽度 */
+  width: 100%;
+  height: 75px;
+  background: #ffffff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom); /* 适配全面屏手机 */
+  
+  /* 确保不被其他元素覆盖 */
+  pointer-events: auto;
+}
+
+/* 确保预览区域底部不被导航栏遮挡 */
+.view-panel {
+  display: none;
+  flex: 1;
+  width: 100%;
+  height: calc(100% - 75px);  /* 减去导航栏高度，避免内容被遮挡 */
+  overflow-y: auto;
+  padding-bottom: 20px;        /* 适当内边距，不用太大 */
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 预览页面也需要避开导航栏 */
+.preview-side {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 20px 95px 20px;  /* 底部留出空间给导航栏（75px + 20px 余量） */
+  display: flex;
+  justify-content: center;
+  transition: 0.3s;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .bottom-nav {
+    height: 70px;
+  }
+  
+  .view-panel {
+    height: calc(100% - 70px);
+  }
+  
+  .preview-side {
+    padding: 15px 15px 85px 15px;
+  }
+}
+
+/* 打印时隐藏导航栏 */
+@media print {
+  .bottom-nav {
+    display: none !important;
+  }
+}
