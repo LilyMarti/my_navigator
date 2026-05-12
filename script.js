@@ -2,22 +2,55 @@
     let currentMode = 'pro';
     const counts = { exp: 0, intern: 0, campus: 0, edu: 0 };
 
-    // 风格切换
-    // function changeTemplate() {
-    //     const val = document.getElementById('tplSelect').value;
-    //     const paper = document.getElementById('resume-content');
-    //     paper.classList.remove('tpl-modern', 'tpl-classic', 'tpl-sideline');
-    //     paper.classList.add(val);
-    // }
-    function changeTemplate() {
-   const val = document.getElementById('tplSelect').value;
+
+
+function toggleStylePanel() {
+    const panel = document.getElementById('style-panel');
+    const content = panel.querySelector('.sidebar-content');
+    
+    panel.classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('active');
+    
+    // 每次打开重置滚动位置
+    if(panel.classList.contains('open') && content) {
+        con
+        
+        tent.scrollTop = 0;
+    }
+    // 点击遮罩层关闭侧边栏
+const overlay = document.getElementById('overlay');
+if (overlay) {
+    overlay.addEventListener('click', function() {
+        const panel = document.getElementById('style-panel');
+        if (panel.classList.contains('open')) {
+            panel.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+    });
+}
+}
+ function selectTemplate(tplName, element) {
     const paper = document.getElementById('resume-content');
     
-    // 移除所有旧风格
-    paper.classList.remove('tpl-modern', 'tpl-classic', 'tpl-sideline', 'tpl-creative', 'tpl-navy', 'tpl-gentle');
+    // 1. 移除旧模板类
+    const allTpls = ['tpl-modern', 'tpl-classic', 'tpl-sideline', 'tpl-navy', 'tpl-gentle','tpl-darkgeek','tpl-cream','tpl-aurora','tpl-popart','tpl-muted','tpl-forest'];
+    paper.classList.remove(...allTpls);
     
-    // 添加新风格
-    paper.classList.add(val);
+    // 2. 添加新模板类
+    paper.classList.add(tplName);
+
+    // 3. 更新侧边栏选中状态
+    document.querySelectorAll('.style-option').forEach(opt => opt.classList.remove('active'));
+    element.classList.add('active');
+
+    // 4. 如果在预览页，实时同步缩放
+    if (typeof autoFitResume === 'function') autoFitResume();
+}
+
+function updateStyle() {
+    const color = document.getElementById('themeColor').value;
+    document.documentElement.style.setProperty('--primary-color', color);
+    document.getElementById('colorValue').innerText = color.toUpperCase();
 }
 
     // 头像处理
@@ -170,10 +203,91 @@ document.getElementById('header-meta').innerHTML = `
         document.documentElement.style.setProperty('--primary-color', document.getElementById('themeColor').value);
     }
 
-    function exportPDF() {
+function switchView(target) {
+    // 1. 获取元素
+    const editorView = document.getElementById('editor-view');
+    const previewView = document.getElementById('preview-view');
+    const navEdit = document.getElementById('nav-edit');
+    const navPreview = document.getElementById('nav-preview');
+
+    // 2. 切换逻辑
+    if (target === 'edit') {
+        editorView.classList.add('active');
+        previewView.classList.remove('active');
+        navEdit.classList.add('active');
+        navPreview.classList.remove('active');
+    } else {
+        editorView.classList.remove('active');
+        previewView.classList.add('active');
+        navEdit.classList.remove('active');
+        navPreview.classList.add('active');
+
+        // 3. 核心：切换到预览时执行一次渲染和缩放适配
+        render(); 
+        autoFitResume();
+    }
+}
+
+// 自动缩放简历以适配不同屏幕宽度
+function autoFitResume() {
+    const paper = document.querySelector('.resume-paper');
+    if (!paper) return;
+    
+    const containerWidth = document.body.clientWidth - 40; // 留出页边距
+    const paperWidth = 794; // A4 标准宽度 px
+    
+    if (containerWidth < paperWidth) {
+        const scale = containerWidth / paperWidth;
+        paper.style.transform = `scale(${scale})`;
+        paper.style.marginBottom = `-${(1 - scale) * paper.offsetHeight}px`; // 修正缩放后的占位高度
+    } else {
+        paper.style.transform = 'scale(1)';
+        paper.style.marginBottom = '0';
+    }
+}
+
+// 初始化：默认显示编辑页
+window.onload = () => {
+    switchView('edit');
+};
+
+// 切换样式面板的显示/隐藏
+function toggleStylePanel() {
+    const panel = document.getElementById('style-panel');
+    panel.classList.toggle('open');
+}
+
+// 修改原有的 switchView 函数，确保切换页面时关闭面板
+function switchView(target) {
+    const editorView = document.getElementById('editor-view');
+    const previewView = document.getElementById('preview-view');
+    const navEdit = document.getElementById('nav-edit');
+    const navPreview = document.getElementById('nav-preview');
+    const panel = document.getElementById('style-panel');
+
+    // 切换时关闭样式面板
+    panel.classList.remove('open');
+
+    if (target === 'edit') {
+        editorView.classList.add('active');
+        previewView.classList.remove('active');
+        navEdit.classList.add('active');
+        navPreview.classList.remove('active');
+    } else {
+        editorView.classList.remove('active');
+        previewView.classList.add('active');
+        navEdit.classList.remove('active');
+        navPreview.classList.add('active');
+        render();
+        autoFitResume();
+    }
+}
+
+
+  function exportPDF() {
         const el = document.getElementById('resume-content');
         html2pdf().set({ margin: 0, filename: 'resume.pdf', html2canvas: { scale: 3 }, jsPDF: { format: 'a4', orientation: 'portrait' } }).from(el).save();
     }
 
-    // 初始化内容
+//     // 初始化内容
     addItem('exp'); addItem('edu');
