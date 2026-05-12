@@ -62,7 +62,7 @@
         .tpl-classic .company-name { color: #000 !important; }
         .tpl-classic .job-title { color: #333 !important; font-style: italic; }
 
-        /* 3. 极简左栏 (侧边栏布局) */
+        /* 3. 极简高亮 (侧边栏布局) */
         .tpl-sideline .resume-header { border-bottom: 3px solid var(--primary-color); padding-bottom: 20px; }
         .tpl-sideline .section-title { background: var(--primary-color); color: white; padding: 5px 15px; border-radius: 4px; border: none; }
 
@@ -79,7 +79,7 @@
 .tpl-navy .info-label { color: #0c0c0c !important; } /* 浅蓝色标签 */
 
 .tpl-navy .section-title {
-    color: #1e3a8a;
+    color:var(--primary-color);
     border-bottom: 2px solid var(--primary-color);
 }
 
@@ -103,6 +103,140 @@
     border-color: #e6dacc;
     color: #845d3e;
 }
+
+/* 6. 森林自然风 (Fresh Forest) 柔和绿意 */
+        .tpl-forest {
+            background: #f6fbf4;
+            color: #2c4230;
+        }
+        .tpl-forest .resume-header {
+            border-left: 5px solid #2f6b47;
+            padding-left: 20px;
+        }
+        .tpl-forest .section-title {
+            color: #2f6b47;
+            font-weight: 700;
+            border-bottom: 2px dashed #bdd3af;
+            letter-spacing: -0.2px;
+        }
+        .tpl-forest .tag {
+            background: #e3f0dd;
+            color: #2f6b47;
+            border-radius: 30px;
+        }
+        .tpl-forest .company-name { color: #2f6b47; }
+        
+        /* 7. 暗夜极客 (Dark Neon) 深色科技感 */
+        .tpl-darkgeek {
+            background: #0f1722;
+            color: #e2e8f0;
+        }
+        .tpl-darkgeek .resume-wrapper {
+            background: #0f1722;
+        }
+        .tpl-darkgeek .section-title {
+            color: #7dd3fc;
+            border-left: 4px solid #38bdf8;
+            padding-left: 12px;
+            font-weight: 600;
+        }
+        .tpl-darkgeek .tag {
+            background: #1e293b;
+            color: #b9e6ff;
+            border: 1px solid #38bdf8;
+        }
+        .tpl-darkgeek .company-name { color: #90e0ff; }
+        .tpl-darkgeek .contact-info { color: #94a3b8; }
+        
+        /* 8. 暖阳奶油风 (Cream Sunshine) 温馨治愈 */
+        .tpl-cream {
+            background: #fff9ef;
+            color: #7a5a4b;
+        }
+        .tpl-cream .section-title {
+            background: #ffefcf;
+            color: #c27e4a;
+            border-radius: 40px;
+            padding: 4px 18px;
+            display: inline-block;
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .tpl-cream .tag {
+            background: #ffe4bc;
+            color: #aa6f42;
+        }
+        .tpl-cream .company-name { color: #b7703c; font-weight: 700; }
+        
+        /* 9. 极光科技 (Aurora Tech) 冰蓝冷色调 */
+        .tpl-aurora {
+            background: linear-gradient(145deg, #ecf9ff, #dfeff8);
+            color: #104366;
+        }
+        .tpl-aurora .section-title {
+            background: rgba(0,110,230,0.1);
+            backdrop-filter: blur(2px);
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-weight: 700;
+            color: #0077be;
+            border-left: 3px solid #0099ff;
+        }
+        .tpl-aurora .tag {
+            background: #d9effa;
+            color: #026aa7;
+        }
+        
+        /* 10. 波普撞色风 (Pop Vivid) 大胆色块 */
+        .tpl-popart {
+            background: #fffcf0;
+            color: #1e1b2e;
+        }
+        .tpl-popart .section-title {
+            background: #ffc857;
+            color: #1f2b3c;
+            padding: 4px 14px;
+            border-radius: 0px 20px 0px 20px;
+            display: inline-block;
+            font-weight: 800;
+            box-shadow: 4px 4px 0px #ff6b6b;
+        }
+        .tpl-popart .tag {
+            background: #ffe0a3;
+            color: var(--primary-color);
+            border-radius: 2px 12px 2px 12px;
+            font-weight: 600;
+        }
+        .tpl-popart .company-name { color: #d64045; }
+        
+        /* 11. 莫兰迪低饱和 (Muted Elegance) */
+        .tpl-muted {
+            background: #f4f0ea;
+            color: #4c4c57;
+        }
+        .tpl-muted .section-title {
+            font-weight: 600;
+            color: #786f68;
+            border-bottom: 1px solid #cdc2b4;
+            letter-spacing: 1px;
+        }
+        .tpl-muted .tag {
+            background: #e7dfd7;
+            color: #5c5550;
+        }
+        .tpl-muted .company-name { color: #9e7c64; }
+        
+        /* ------ 响应式调整 ------ */
+        @media (max-width: 700px) {
+            .resume-wrapper {
+                padding: 1.5rem;
+            }
+            .tpl-navy .resume-header {
+                margin: -20px -30px 20px -30px;
+                padding: 25px 30px;
+            }
+        }
+
 
         /* 通用组件样式 */
         .resume-header { display: flex; justify-content: space-between; margin-bottom: 30px; align-items: flex-start;}
@@ -156,7 +290,7 @@
 }
 
 #outname{
-    border-left: 5px solid var(--primary-color); padding-left: 20px;
+    border-left: 5px solid var(--primary-color); padding-left: 20px; padding-bottom: 30px;
 }
 .info-label {
     font-weight: 700;
@@ -171,14 +305,16 @@
     
     /* 这里保留你之前的样式设计 */
     width: calc(100% + 100px);
-    height: 80px;
+    height: 140px;
     background: var(--primary-color);
     margin: -40px -50px 20px -50px;
+    margin-top: -60px;
     color: white;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: bold;
-    letter-spacing: 10px; /* 让“个人简历”四个字更有呼吸感 */
-    padding-bottom: 10px;
+    letter-spacing: 20px; /* 让“个人简历”四个字更有呼吸感 */
+    padding-bottom: 12px;
+    padding-top: 12px;
     
     /* 居中对齐 */
     display: none; /* 必须先设为 none，下面再针对性开启 */
@@ -189,138 +325,309 @@
 /* 重点：当外层是这三种风格时，显示色块 */
 .tpl-modern .top-black,
 .tpl-classic .top-black,
-.tpl-sideline .top-black {
+.tpl-sideline .top-black ,
+.tpl-forest.top-black,
+.tp1-darkgeek.top-black,
+.tp1-cream.top-black,  
+.tp1-aurora.top-black,
+.tp1-popart.top-black{
     display: flex; /* 开启显示，并保持居中布局 */
 }
-/* .tpl-modern .top-black,
-.tpl-classic .top-black,
-.tpl-sideline .top-black {
+
+.app-container {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* 视图面板通用样式 */
+/* 修改 view-panel 的样式 */
+.view-panel {
+    display: none;
+    flex: 1;
+    width: 100%;
+    height: calc(100% - 75px); /* 保持减去导航栏高度 */
+    overflow-y: auto;
+    
+    /* 核心修复：内边距要大于底部导航栏的高度(75px) */
+    padding-bottom: 120px !important; 
+    
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+}
+/* 激活状态显示 */
+.view-panel.active {
+    display: block;
+}
+
+/* 底部导航栏样式 */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    background: #ffffff;
     display: flex;
-    background: linear-gradient(135deg, var(--primary-color) 0%, #1e293b 100%);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    border-bottom: 3px solid rgba(0,0,0,0.1);
-} */
+    box-shadow: 0 -2px 15px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
 
-/* --- 手机设备样式调整 --- */
-@media (max-width: 600px) {
-    body { flex-direction: column; align-items: center; }
+.nav-item {
+    flex: 1;
+    border: none;
+    background: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #94a3b8;
+    transition: 0.3s;
+}
 
-    .floating-toolbar {
-        width: calc(100% - 20px);
-        left: 10px;
-        right: 10px;
-        top: auto;
-        bottom: 20px;
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
+.nav-item.active {
+    color: var(--primary-color);
+}
 
-    .editor-side {
-        width: 100%;
-        box-shadow: none;
-    }
+.nav-item .icon { font-size: 20px; margin-bottom: 4px; }
+.nav-item .text { font-size: 14px; font-weight: bold; }
 
-    .preview-side {
-        width: 100%;
-        padding: 20px;
-    }
-
-    .resume-paper {
-        width: calc(100% - 40px);
-        max-width: 500px; /* 设置最大宽度以防止内容过宽 */
-    }
-
-    .editor-section, .toolbar-col {
-        margin-bottom: 20px;
-    }
-
-    .tag-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-    }
-
-    .info-row {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .info-item {
-        white-space: normal;
-        word-break: break-all;
-    }
-
-    .top-black {
-        width: calc(100% + 20px);
-        height: 60px;
-        margin: -20px -10px 10px -10px;
-        font-size: 18px;
-        letter-spacing: 8px;
-    }
-
-    .tpl-modern .top-black,
-    .tpl-classic .top-black,
-    .tpl-sideline .top-black {
-        display: flex;
-    }
-
-    .tpl-sideline .resume-header {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .tpl-sideline .resume-header .avatar-preview {
-        margin-bottom: 10px;
-    }
-
-    .tpl-modern .resume-header,
-    .tpl-classic .resume-header,
-    .tpl-sideline .resume-header {
-        margin: -20px -10px 10px -10px;
+/* 针对预览页面的特殊缩放 (适配屏幕宽度) */
+@media (max-width: 768px) {
+    .preview-container {
         padding: 20px 10px;
+        display: flex;
+        justify-content: center;
     }
-
-    .tag, .info-label {
-        font-size: 0.7rem;
-    }
-
-    .toolbar-btn, .toolbar-select {
-        font-size: 0.7rem;
-        padding: 8px;
-    }
-
-    h2 {
-        font-size: 0.85rem;
-    }
-
-    .form-group label {
-        font-size: 0.7rem;
-    }
-
-    .form-group input, .form-group textarea {
-        font-size: 0.7rem;
-        padding: 6px;
-    }
-
-    .desc {
-        font-size: 0.7rem;
-        line-height: 1.5;
+    .resume-paper {
+        transform-origin: top center;
+        /* 这里比例可以根据 JS 动态计算更精准 */
     }
 }
 
-@media print {
-    /* 强制简历容器在导出时保持 A4 的物理宽度 */
-    #resume-content {
-        width: 210mm !important;
-        min-height: 297mm !important;
-        transform: none !important; /* 取消任何移动端的缩放 */
-        position: static !important;
-    }
+/* 抽屉式面板样式 */
+/* 抽屉样式优化 */
+.style-drawer {
+    position: fixed;
+    bottom: -100%;
+    left: 0;
+    width: 100%;
+    height: 70vh; /* 弹出高度 */
+    background: #fff;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
+    transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2000;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
 }
 
-/* 针对 html2pdf 渲染时的临时状态修复 */
-.html2pdf__container #resume-content {
-    width: 210mm !important;
-    padding: 40px !important; /* 确保内边距固定 */
+.style-drawer.open {
+    bottom: 0; /* 直接弹到底部 */
 }
+
+/* 列表样式设计 */
+.style-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.style-option {
+    padding: 14px 18px;
+    background: #f1f5f9;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #475569;
+    border: 2px solid transparent;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.style-option.active {
+    background: #eff6ff;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* 颜色选择器美化 */
+.color-picker-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #f1f5f9;
+    padding: 10px;
+    border-radius: 12px;
+}
+
+#themeColor {
+    width: 50px;
+    height: 30px;
+    border: none;
+    cursor: pointer;
+    background: none;
+}
+
+
+/* 底部导航栏容器 */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 75px; /* 略微增加高度 */
+    background: #ffffff;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom); /* 适配留海屏手机 */
+}
+
+.nav-item {
+    flex: 1;
+    border: none;
+    background: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+
+.export-main-btn .text {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.nav-item.active {
+    color: var(--primary-color);
+}
+
+.close-btn {
+    background: rgb(83, 83, 194);
+    border:none;
+    padding: 5px 10px;
+    font-size: 20px;
+    color: #edf2fa;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    border: solid none;
+    transition: color 0.2s;
+}
+
+/* 侧边栏基础样式 */
+/* 侧边栏主容器 */
+.style-sidebar {
+    position: fixed;
+    top: 0;
+    right: -320px;
+    width: 320px;
+    height: 100vh;      /* 必须强制等于视口高度 */
+    background: #ffffff;
+    z-index: 2000;
+    transition: right 0.3s ease;
+    
+    /* 关键修复：确保容器本身不溢出，内部内容可滚动 */
+    display: flex;
+    flex-direction: column; 
+    overflow: hidden;   
+}
+
+/* 侧边栏头部 - 固定不动 */
+.sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    flex-shrink: 0;     /* 防止头部被压缩 */
+}
+
+/* 侧边栏内容区 - 开启滚动 */
+.sidebar-content {
+    flex: 1;            /* 占据剩余所有空间 */
+    overflow-y: auto;   /* 关键修复：允许纵向滚动 */
+    padding: 20px;
+    padding-bottom: 100px; /* 留出底部间距，防止内容被遮挡 */
+    
+    /* 优化移动端滚动流畅度 */
+    -webkit-overflow-scrolling: touch; 
+}
+
+/* 激活状态：划入页面 */
+.style-sidebar.open {
+    right: 0;
+}
+
+
+
+
+/* 遮罩层 */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(2px);
+    display: none; /* 默认隐藏 */
+    z-index: 1900;
+}
+
+.overlay.active {
+    display: block;
+}
+
+/* 样式选项按钮优化 */
+.style-option {
+    margin-bottom: 12px;
+    padding: 15px;
+    background: #f8fafc;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 14px;
+}
+
+.style-option:hover { background: #f1f5f9; }
+
+.style-option.active {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: #eff6ff;
+    font-weight: bold;
+}
+
+/* 自定义侧边栏滚动条样式 */
+.sidebar-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+.sidebar-header{
+    display: relative;
+}
+
 
