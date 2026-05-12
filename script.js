@@ -290,33 +290,45 @@ function switchView(target) {
 //     }
 
 function exportPDF() {
-    const el = document.getElementById('resume-content');
+    const sourceEl = document.getElementById('resume-content');
     
-    // 强制先清理一下可能影响高度的临时样式
-    el.style.height = 'auto';
+    // 1. 克隆一个简历副本，避免污染原页面 UI
+    const cloneEl = sourceEl.cloneNode(true);
+    
+    // 2. 强制给副本应用 A4 标准样式，消除手机端 CSS 响应式的影响
+    Object.assign(cloneEl.style, {
+        width: '210mm',
+        height: 'auto',
+        position: 'absolute',
+        top: '-9999px', // 移出可视区
+        left: '0',
+        transform: 'none', // 移除所有缩放
+        margin: '0',
+        padding: '20mm', // 强制页边距
+        backgroundColor: '#ffffff'
+    });
+    
+    document.body.appendChild(cloneEl);
 
+    // 3. 配置参数
     const opt = {
         margin: 0,
         filename: '我的简历.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
+        image: { type: 'jpeg', quality: 1.0 },
         html2canvas: { 
             scale: 2, 
             useCORS: true,
-            windowWidth: 800,
-            scrollY: 0, // 核心：防止因为页面滚动导致的截图偏移
+            windowWidth: 794, // 210mm 在 96DPI 下约等于 794px
+            scrollY: 0,
+            scrollX: 0
         },
-        jsPDF: { 
-            unit: 'mm', 
-            format: 'a4', 
-            orientation: 'portrait' 
-        },
-        // 关键：自动分页逻辑，防止下半部分被遮挡或截断
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    html2pdf().set(opt).from(el).save().then(() => {
-        // 导出完成后恢复可能的样式（如果需要）
-        el.style.height = ''; 
+    // 4. 执行导出并销毁副本
+    html2pdf().set(opt).from(cloneEl).save().then(() => {
+        document.body.removeChild(cloneEl);
     });
 }
 //     // 初始化内容
