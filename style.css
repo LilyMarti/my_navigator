@@ -629,5 +629,19 @@
 .sidebar-header{
     display: relative;
 }
+#outAvatar {
+    width: 105px;
+    height: 130px;
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-right: 40px;
+    
+    /* 关键修改：增加右边距，图片就会向左移动 */
+     margin-right: 25px; 
+    
+    /* 如果你的 header 是 flex 布局，确保它不会被压缩 */
+    flex-shrink: 0;
+} 
 
 
