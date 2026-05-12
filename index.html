@@ -348,6 +348,38 @@ h2 {
 
 }
 
+/* 针对导出插件的特殊样式修复 */
+.resume-paper {
+    width: 210mm; /* A4 标准宽度 */
+    min-height: 297mm;
+    margin: 0 auto;
+    background: white;
+    /* 确保导出时文字不会超出边框 */
+    word-wrap: break-word;
+    overflow: visible !important;
+}
+
+/* 解决手机端由于 CSS Transform 导致的截图偏移 */
+.html2pdf__container .resume-paper {
+    transform: none !important;
+}
+
+/* 确保导出时内容不会被截断 */
+.html2pdf__container #resume-content {
+    height: auto !important;
+    min-height: 297mm !important; /* 强制 A4 高度 */
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 20mm !important; /* 确保页边距固定 */
+}
+
+/* 隐藏导出时可能干扰布局的 UI 元素 */
+.html2pdf__container .bottom-nav,
+.html2pdf__container .style-sidebar,
+.html2pdf__container .overlay {
+    display: none !important;
+}
+
     </style>
 </head>
 <body>
