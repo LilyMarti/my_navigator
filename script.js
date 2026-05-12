@@ -1,8 +1,7 @@
 
-    let currentMode = 'pro';
-    const counts = { exp: 0, intern: 0, campus: 0, edu: 0 };
 
-
+let counts = { exp: 0, intern: 0, campus: 0, edu: 0 }; 
+let currentMode = 'pro';
 
 function toggleStylePanel() {
     const panel = document.getElementById('style-panel');
@@ -66,18 +65,20 @@ function updateStyle() {
     }
 
     // 模式切换
-    function switchMode(mode) {
-        currentMode = mode;
-        document.getElementById('btn-pro').classList.toggle('active', mode === 'pro');
-        document.getElementById('btn-stu').classList.toggle('active', mode === 'stu');
-        
-        document.getElementById('pro-experience').style.display = mode === 'pro' ? 'block' : 'none';
-        document.getElementById('stu-experience').style.display = mode === 'stu' ? 'block' : 'none';
-        
-        document.getElementById('exp-title').innerText = mode === 'pro' ? '工作经历 / Experience' : '实习经历 / Internship';
-        document.getElementById('campus-section').style.display = mode === 'stu' ? 'block' : 'none';
-        render();
-    }
+  function switchMode(mode) {
+    currentMode = mode;
+    
+    // 1. 切换编辑区的显隐
+    document.getElementById('pro-experience').style.display = mode === 'pro' ? 'block' : 'none';
+    document.getElementById('stu-experience').style.display = mode === 'stu' ? 'block' : 'none';
+    
+    // 2. 切换按钮高亮样式
+    document.getElementById('btn-pro').classList.toggle('active', mode === 'pro');
+    document.getElementById('btn-stu').classList.toggle('active', mode === 'stu');
+    
+    // 3. 立即触发渲染，更新预览区
+    render();
+}
 
     function addItem(type) {
         const id = ++counts[type];
@@ -109,108 +110,156 @@ function updateStyle() {
         render();
     }
 
+    function renderEducation() {
+    const container = document.getElementById('eduInputs');
+    const output = document.getElementById('outEdu');
+    if (!container || !output) return;
+
+    let html = '';
+    container.querySelectorAll('.dynamic-item').forEach(item => {
+        const school = item.querySelector('.item-main').value;
+        const major = item.querySelector('.item-sub').value;
+        const start = item.querySelector('.item-start').value;
+        const end = item.querySelector('.item-end').value || "至今";
+        const coursesVal = item.querySelector('.item-courses') ? item.querySelector('.item-courses').value : '';
+
+        // 处理课程标签
+        const courseTags = coursesVal.split(/[,，]/)
+            .map(c => c.trim() ? `<span class="tag" style="background:#eff6ff; border-color:#dbeafe;">${c}</span>` : '')
+            .join('');
+
+        if (school || major) {
+            html += `
+                <div style="margin-bottom: 15px;">
+                    <div class="item-row" style="display: flex; justify-content: space-between;">
+                        <span><strong>${school}</strong> · ${major}</span>
+                        <span class="item-date">${start} — ${end}</span>
+                    </div>
+                    ${courseTags ? `<div class="tag-container" style="margin-top: 5px;">${courseTags}</div>` : ''}
+                </div>
+            `;
+        }
+    });
+    output.innerHTML = html;
+}
+
     function render() {
-    // 1. 姓名部分
-const nameVal = document.getElementById('inName').value || "王小明";
+    // --- 1. 基本信息同步 ---
+    const nameVal = document.getElementById('inName').value || "姓名";
     document.getElementById('outName').innerText = nameVal;
     
+    const age = document.getElementById('inAge').value || '年龄';
+    const phone = document.getElementById('inPhone').value || '联系电话';
+    const email = document.getElementById('inEmail').value || '电子邮箱';
+    const eduLevel = document.getElementById('edu').value || '学历'; // 基本信息里的学历
+    const addr = document.getElementById('addr').value || '居住地址';
 
-    // 2. 个人评价
-    document.getElementById('outSummary').innerText = document.getElementById('inSummary').value || "请在左侧输入...";
-    
+    // 更新联系方式栏 (Header Meta)
+    const headerMeta = document.getElementById('header-meta');
+    if (headerMeta) {
+        headerMeta.innerHTML = `
+            <div class="info-item"><span class="info-label">年龄：</span>${age}</div>
+            <div class="info-item"><span class="info-label">电话：</span>${phone}</div>
+            <div class="info-item"><span class="info-label">学历：</span>${eduLevel}</div>
+            <div class="info-item"><span class="info-label">地址：</span>${addr}</div>
+            <div class="info-item" style="grid-column: span 2;">
+                <span class="info-label">邮箱：</span>${email}
+            </div>
+        `;
+    }
 
-    // 3. 提取输入值
-    const age = document.getElementById('inAge').value || '25岁';
-    const phone = document.getElementById('inPhone').value || '138-0000-0000';
-    const email = document.getElementById('inEmail').value || 'example@email.com';
-    const edu = document.getElementById('edu').value || '本科';
-    const addr = document.getElementById('addr').value || '北京市';
+    // --- 2. 个人总结与技能描述 ---
+    const summary = document.getElementById('inSummary').value;
+    document.getElementById('outSummary').innerText = summary || "请填写个人评价...";
 
-    // 个人技能渲染
-    const personalInput = document.getElementById('inPersonal').value; // 假设左侧输入框ID为inPersonal
+    const personalInput = document.getElementById('inPersonal').value;
     const personalOutput = document.getElementById('outPersonal');
-
-    if (!personalInput.trim()) {
-        personalOutput.innerText = "请在左侧输入您的个人技能描述...";
-        personalOutput.style.color = "#94a3b8"; // 未输入时显示淡灰色
-    } else {
-        // 使用 innerText 配合 CSS 的 white-space 属性
-        // 这样可以完美保留换行，并防止 HTML 脚本注入
-        personalOutput.innerText = personalInput;
-        personalOutput.style.color = "#475569"; // 正常文本颜色
+    if (personalOutput) {
+        personalOutput.innerText = personalInput || "请填写专业技能描述...";
+        personalOutput.style.color = personalInput ? "#475569" : "#94a3b8";
     }
+
+    // --- 3. 技能标签渲染 (用逗号分隔) ---
+    const skillsVal = document.getElementById('inSkills').value;
+    const outSkills = document.getElementById('outSkills');
+    if (outSkills) {
+        const skillsArray = skillsVal.split(/[,，]/);
+        outSkills.innerHTML = skillsArray
+            .map(s => s.trim() ? `<span class="tag">${s.trim()}</span>` : '')
+            .join('');
+    }
+
+    // --- 4. 经历部分渲染 (核心逻辑) ---
     
+    // 同步标题：工作经历 vs 实习经历
+   const expTitlePreview = document.querySelector('#outExpSection .section-title');
+    if (expTitlePreview) {
+        expTitlePreview.innerText = currentMode === 'pro' ? '工作经历 / Experience' : '实习经历 / Internship';
+    }
+    // 渲染主经历区
+   const mainInputId = currentMode === 'pro' ? 'expInputs' : 'internInputs';
+    renderList(mainInputId, 'outExp');
 
-    // 4. 重新布局：使用 class 来控制间距和固定
-document.getElementById('header-meta').innerHTML = `
-        <div class="info-item"><span class="info-label">年龄：</span>${age}</div>
-        <div class="info-item"><span class="info-label">电话：</span>${phone}</div>
-        <div class="info-item"><span class="info-label">学历：</span>${edu}</div>
-        <div class="info-item"><span class="info-label">地址：</span>${addr}</div>
-        <div class="info-item" style="grid-column: span 2;">
-            <span class="info-label">邮箱：</span>${email}
-        </div>
-    `;
-        // 渲染经历
-        const mainInputId = currentMode === 'pro' ? 'expInputs' : 'internInputs';
-        renderList(mainInputId, 'outExp');
-        if(currentMode === 'stu') renderList('campusInputs', 'outCampus');
-
-        // 教育渲染（特殊处理课程标签）
-        let eduHtml = '';
-        document.querySelectorAll('#eduInputs .dynamic-item').forEach(item => {
-            const sch = item.querySelector('.item-main').value;
-            const maj = item.querySelector('.item-sub').value;
-            const s = item.querySelector('.item-start').value;
-            const e = item.querySelector('.item-end').value || "至今";
-            const courses = item.querySelector('.item-courses').value.split(/[,，]/).map(c => c.trim() ? `<span class="tag" style="background:#eff6ff; border-color:#dbeafe; color:var(--primary-color)">${c}</span>` : '').join('');
-            
-            eduHtml += `<div style="margin-bottom:15px">
-                <div class="item-row">
-                    <div><span class="company-name">${sch}</span><span class="job-title">${maj}</span></div>
-                    <span class="item-date">${s} - ${e}</span>
-                </div>
-                <div class="tag-container">${courses}</div>
-            </div>`;
-        });
-        document.getElementById('outEdu').innerHTML = eduHtml;
-
-        // 技能渲染
-        const skills = document.getElementById('inSkills').value.split(/[,，]/);
-        document.getElementById('outSkills').innerHTML = skills.map(s => s.trim() ? `<span class="tag">${s}</span>` : '').join('');
+    // 渲染校园经历 (仅在学生模式显示)
+    const outCampusSec = document.getElementById('outCampusSection');
+    if (outCampusSec) {
+        if (currentMode === 'stu') {
+            outCampusSec.style.display = 'block';
+            renderList('campusInputs', 'outCampus');
+        } else {
+            outCampusSec.style.display = 'none';
+        }
     }
 
-    function renderList(inputId, outputId) {
-        let html = '';
-        document.querySelectorAll(`#${inputId} .dynamic-item`).forEach(item => {
-            const m = item.querySelector('.item-main').value;
-            const s = item.querySelector('.item-sub').value;
-            const start = item.querySelector('.item-start').value;
-            const end = item.querySelector('.item-end').value || "至今";
-            const desc = item.querySelector('.item-desc').value;
-            html += `<div style="margin-bottom:15px">
-                <div class="item-row">
-                    <div><span class="company-name">${m}</span><span class="job-title">${s}</span></div>
-                    <span class="item-date">${start} - ${end}</span>
-                </div>
-                <div class="desc">${desc}</div>
-            </div>`;
-        });
-        document.getElementById(outputId).innerHTML = html;
-    }
+    // --- 5. 教育背景渲染 (特殊处理课程标签) ---
+    renderEducation();
+}
 
+   /**
+ * 通用渲染函数：处理工作、实习、校园经历
+ * @param {string} inputContainerId 左侧输入框容器ID
+ * @param {string} outputContainerId 右侧预览显示容器ID
+ */
+function renderList(inputContainerId, outputContainerId) {
+    const container = document.getElementById(inputContainerId);
+    const output = document.getElementById(outputContainerId);
+    if (!container || !output) return;
+
+    let html = '';
+    const items = container.querySelectorAll('.dynamic-item');
+
+    items.forEach(item => {
+        const main = item.querySelector('.item-main').value;   // 公司或机构名称
+        const sub = item.querySelector('.item-sub').value;     // 职位或角色
+        const start = item.querySelector('.item-start').value; // 开始日期
+        const end = item.querySelector('.item-end').value || "至今";
+        const desc = item.querySelector('.item-desc') ? item.querySelector('.item-desc').value : '';
+
+        if (main || sub) {
+            html += `
+                <div class="info-block" style="margin-bottom: 15px;">
+                    <div class="item-row" style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <strong style="font-size: 1.1em;">${main}</strong>
+                        <span class="item-date" style="font-size: 0.9em; color: #666;">${start} — ${end}</span>
+                    </div>
+                    <div style="font-style: italic; color: #444; margin-bottom: 4px;">${sub}</div>
+                    <div style="white-space: pre-line; font-size: 0.95em; color: #333; line-height: 1.5;">${desc}</div>
+                </div>
+            `;
+        }
+    });
+
+    output.innerHTML = html || `<p style="color: #94a3b8; font-size: 0.9em;">点击左侧“+添加”完善此部分内容</p>`;
+}
     function updateStyle() {
         document.documentElement.style.setProperty('--primary-color', document.getElementById('themeColor').value);
     }
-
-function switchView(target) {
-    // 1. 获取元素
+    function switchView(target) {
     const editorView = document.getElementById('editor-view');
     const previewView = document.getElementById('preview-view');
     const navEdit = document.getElementById('nav-edit');
     const navPreview = document.getElementById('nav-preview');
 
-    // 2. 切换逻辑
     if (target === 'edit') {
         editorView.classList.add('active');
         previewView.classList.remove('active');
@@ -222,35 +271,50 @@ function switchView(target) {
         navEdit.classList.remove('active');
         navPreview.classList.add('active');
 
-        // 3. 核心：切换到预览时执行一次渲染和缩放适配
+        // 核心优化：
+        // 1. 先执行数据渲染
         render(); 
-        autoFitResume();
+        
+        // 2. 确保在下一帧执行缩放，避免获取不到正确的 offsetWidth
+        requestAnimationFrame(() => {
+            autoFitResume();
+        });
+        
+        // 3. 针对某些老款安卓机型，加一层双保险延迟
+        setTimeout(autoFitResume, 100);
     }
 }
-
 // 自动缩放简历以适配不同屏幕宽度
 function autoFitResume() {
-    const paper = document.querySelector('.resume-paper');
-    if (!paper) return;
-    
-    const containerWidth = document.body.clientWidth - 40; // 留出页边距
-    const paperWidth = 794; // A4 标准宽度 px
-    
-    if (containerWidth < paperWidth) {
-        const scale = containerWidth / paperWidth;
-        paper.style.transform = `scale(${scale})`;
-        paper.style.marginBottom = `-${(1 - scale) * paper.offsetHeight}px`; // 修正缩放后的占位高度
+    const resume = document.getElementById('resume-content');
+    const container = document.getElementById('preview-view'); // 预览视图的包裹层
+
+    if (!resume || !container) return;
+
+    // 1. 重置缩放，获取简历原始尺寸
+    resume.style.transform = 'scale(1)';
+    const resumeWidth = 794; // A4 标准像素宽 (210mm)
+    const screenWidth = window.innerWidth;
+
+    // 2. 计算缩放比（左右各留 10px 边距）
+    if (screenWidth < resumeWidth) {
+        const padding = 20; 
+        const scale = (screenWidth - padding) / resumeWidth;
+
+        // 3. 应用缩放
+        // transform-origin 必须在 CSS 里设为 top center
+        resume.style.transform = `scale(${scale})`;
+
+        // 4. 高度修正：Scale 缩放不会改变元素占用的原始物理高度
+        // 我们需要手动调整容器高度，否则底部会出现巨大空白
+        const scaledHeight = resume.offsetHeight * scale;
+        container.style.height = (scaledHeight + 40) + 'px'; 
     } else {
-        paper.style.transform = 'scale(1)';
-        paper.style.marginBottom = '0';
+        // PC 端恢复
+        resume.style.transform = 'scale(1)';
+        container.style.height = 'auto';
     }
 }
-
-// 初始化：默认显示编辑页
-window.onload = () => {
-    switchView('edit');
-};
-
 // 切换样式面板的显示/隐藏
 function toggleStylePanel() {
     const panel = document.getElementById('style-panel');
@@ -282,7 +346,11 @@ function switchView(target) {
         autoFitResume();
     }
 }
-
+window.addEventListener('resize', () => {
+    if (document.getElementById('preview-view').classList.contains('active')) {
+        autoFitResume();
+    }
+});
 
 //   function exportPDF() {
 //         const el = document.getElementById('resume-content');
