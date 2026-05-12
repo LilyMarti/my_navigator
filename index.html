@@ -367,7 +367,18 @@ h2 {
 .section-title, .form-group, .desc {
     page-break-inside: avoid;
 }
+.preview-container {
+    width: 100%;
+    overflow-x: hidden; /* 防止溢出出现滚动条 */
+    display: flex;
+    justify-content: center; /* 水平居中 */
+    padding: 10px 0;
+}
 
+#resume-content {
+    transform-origin: top center; /* 确保从顶部中心开始缩放 */
+    transition: transform 0.2s ease; /* 增加平滑感 */
+}
     </style>
 </head>
 <body>
@@ -405,17 +416,21 @@ h2 {
             <h2>教育背景 <button class="btn-add" onclick="addItem('edu')">+ 添加</button></h2>
             <div id="eduInputs"></div>
 
-            <div id="pro-experience">
-                <h2>工作经历 <button class="btn-add" onclick="addItem('exp')">+ 添加</button></h2>
-                <div id="expInputs"></div>
-            </div>
-
+   
+<div id="pro-experience">
+    <h2 id="exp-title">工作经历 <button class="btn-add" onclick="addItem('exp')">+ 添加</button></h2>
+    <div id="expInputs"></div>
+</div>
             <div id="stu-experience" style="display:none;">
-                <h2>实习经历 <button class="btn-add" onclick="addItem('intern')">+ 添加</button></h2>
-                <div id="internInputs"></div>
-                <h2>校园活动/项目 <button class="btn-add" onclick="addItem('campus')">+ 添加</button></h2>
-                <div id="campusInputs"></div>
-            </div>
+    <h2>实习经历 <button class="btn-add" onclick="addItem('intern')">+ 添加</button></h2>
+    <div id="internInputs"></div>
+    
+    <!-- 为整个校园活动板块添加 ID -->
+    <div id="campus-section">
+        <h2>校园活动/项目 <button class="btn-add" onclick="addItem('campus')">+ 添加</button></h2>
+        <div id="campusInputs"></div>
+    </div>
+</div>
 
             <h2 style="align-content: center; padding-right: 20px;">专业技能 </h2>
             <div class="form-group">
@@ -448,12 +463,12 @@ h2 {
                 <div class="section-title">教育背景 / Education</div>
                 <div id="outEdu"></div>
 
-                <div id="exp-section">
+                <div id="outExpSection">
                     <div class="section-title">工作经历 / Experience</div>
                     <div id="outExp"></div>
                 </div>
 
-                <div id="campus-section" style="display:none;">
+                <div id="outCampusSection" style="display:none;">
                     <div class="section-title">校园与实践 / Campus</div>
                     <div id="outCampus"></div>
                 </div>
