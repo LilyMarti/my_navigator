@@ -125,17 +125,32 @@ function updateStyle() {
 
         // 处理课程标签
         const courseTags = coursesVal.split(/[,，]/)
-            .map(c => c.trim() ? `<span class="tag" style="background:#eff6ff; border-color:#dbeafe;">${c}</span>` : '')
+            .map(c => c.trim() ? `<span class="tag" style="background:#eff6ff; border-color:#dbeafe; padding: 2px 8px; margin: 2px; border-radius: 4px; font-size: 0.85em;">${c}</span>` : '')
             .join('');
 
         if (school || major) {
             html += `
                 <div style="margin-bottom: 15px;">
-                    <div class="item-row" style="display: flex; justify-content: space-between;">
-                        <span><strong>${school}</strong> · ${major}</span>
-                        <span class="item-date">${start} — ${end}</span>
+                    <!-- 第一行：左(学校) - 中(专业) - 右(日期) -->
+                    <div class="item-row" style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px;">
+                        
+                        <!-- 左侧：学校名称 (加粗) -->
+                        <span style="font-weight: bold; flex: 0 0 auto; font-size: 1.1em;">${school}</span>
+                        
+                        <!-- 中间：专业 (居中, 斜体, 稍小) -->
+                        <span style="flex: 1; text-align: center; font-style: italic; font-size: 0.95em; padding: 0 10px;">${major}</span>
+                        
+                        <!-- 右侧：日期 -->
+                        <span class="item-date" style="flex: 0 0 auto; font-size: 0.9em; color: #666;">${start} — ${end}</span>
                     </div>
-                    ${courseTags ? `<div class="tag-container" style="margin-top: 5px;">${courseTags}</div>` : ''}
+
+                    <!-- 第二行：课程内容 -->
+                    <div style="margin-top: 8px;">
+                        <label style="font-size: 0.9em; font-weight: bold; color: #444;">主修课程：</label>
+                        <div class="tag-container" style="display: inline-flex; flex-wrap: wrap; gap: 4px; vertical-align: middle;">
+                            ${courseTags || '<span style="color: #94a3b8; font-size: 0.85em;">暂未填写</span>'}
+                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -229,24 +244,32 @@ function renderList(inputContainerId, outputContainerId) {
     const items = container.querySelectorAll('.dynamic-item');
 
     items.forEach(item => {
-        const main = item.querySelector('.item-main').value;   // 公司或机构名称
-        const sub = item.querySelector('.item-sub').value;     // 职位或角色
-        const start = item.querySelector('.item-start').value; // 开始日期
-        const end = item.querySelector('.item-end').value || "至今";
-        const desc = item.querySelector('.item-desc') ? item.querySelector('.item-desc').value : '';
+    const main = item.querySelector('.item-main').value;   // 公司或机构名称
+    const sub = item.querySelector('.item-sub').value;     // 职位或角色
+    const start = item.querySelector('.item-start').value; // 开始日期
+    const end = item.querySelector('.item-end').value || "至今";
+    const desc = item.querySelector('.item-desc') ? item.querySelector('.item-desc').value : '';
 
-        if (main || sub) {
-            html += `
-                <div class="info-block" style="margin-bottom: 15px;">
-                    <div class="item-row" style="display: flex; justify-content: space-between; align-items: baseline;">
-                        <strong style="font-size: 1.1em;">${main}</strong>
-                        <span class="item-date" style="font-size: 0.9em; color: #666;">${start} — ${end}</span>
-                    </div>
-                    <div style="font-style: italic; color: #444; margin-bottom: 4px;">${sub}</div>
-                    <div style="white-space: pre-line; font-size: 0.95em; color: #333; line-height: 1.5;">${desc}</div>
+    if (main || sub) {
+        html += `
+            <div class="info-block" style="margin-bottom: 15px;">
+                <!-- 第一行：左(公司) - 中(职位) - 右(日期) -->
+                <div class="item-row" style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px;">
+                    <!-- 左侧：公司名称 (加粗, 1.1em) -->
+                    <span style="font-size: 1.1em; font-weight: bold; flex: 0 0 auto;">${main}</span>
+                    
+                    <!-- 中间：职位 (不加粗, 斜体, 小一号, 居中对齐) -->
+                    <span style="font-size: 0.95em; font-weight: normal; font-style: italic; flex: 1; text-align: center; padding: 0 10px;">${sub}</span>
+                    
+                    <!-- 右侧：日期 (灰色, 0.9em) -->
+                    <span class="item-date" style="font-size: 0.9em; color: #666; flex: 0 0 auto;">${start} — ${end}</span>
                 </div>
-            `;
-        }
+                
+                <!-- 第二行：详细描述 -->
+                <div style="white-space: pre-line; font-size: 0.95em; color: #333; line-height: 1.5;">${desc}</div>
+            </div>
+        `;
+    }
     });
 
     output.innerHTML = html || `<p style="color: #94a3b8; font-size: 0.9em;">点击左侧“+添加”完善此部分内容</p>`;
